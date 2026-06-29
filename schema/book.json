@@ -1,0 +1,80 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Recipe Book",
+    "description": "A themed collection of recipes drawn from the recipe library",
+    "type": "object",
+    "required": ["title", "sections"],
+    "properties": {
+        "title": {
+            "type": "string"
+        },
+        "subtitle": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "theme": {
+            "type": "string",
+            "examples": ["fermentation", "sauces", "summer grilling", "weeknight dinners"]
+        },
+        "author": {
+            "type": "string"
+        },
+        "edition": {
+            "type": "string",
+            "examples": ["First Edition", "Revised Edition"]
+        },
+        "date": {
+            "type": "string",
+            "format": "date",
+            "examples": ["2026-01-01"]
+        },
+        "cover_image": {
+            "type": "string",
+            "description": "Path to cover image, relative to project root"
+        },
+        "$schema": {
+            "type": "string"
+        },
+        "sections": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Ordered list of sections. Use a single untitled section for a flat book.",
+            "items": {
+                "type": "object",
+                "required": ["recipes"],
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Section or chapter title. Omit for a flat, unsectioned book."
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "recipes": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "required": ["file"],
+                            "properties": {
+                                "file": {
+                                    "type": "string",
+                                    "description": "Recipe filename stem, relative to recipes/ (e.g. 'sauerkraut')"
+                                },
+                                "note": {
+                                    "type": "string",
+                                    "description": "Editorial note printed alongside this recipe in the book"
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    }
+                },
+                "additionalProperties": false
+            }
+        }
+    },
+    "additionalProperties": false
+}

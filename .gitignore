@@ -1,0 +1,7 @@
+output
+__pycache__
+.vscode
+books/*.json
+images/*
+recipes/*.json
+claude.md

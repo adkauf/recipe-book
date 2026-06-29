@@ -1,0 +1,128 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Recipe",
+    "description": "A single recipe in the recipe book collection",
+    "type": "object",
+    "required": ["title", "category", "yield", "components"],
+    "properties": {
+        "$schema": {
+            "type": "string"
+        },
+        "title": {
+            "type": "string"
+        },
+        "category": {
+            "type": "string",
+            "examples": ["sauce", "fermented vegetables", "curd", "condiment", "dessert"]
+        },
+        "method": {
+            "type": "string",
+            "examples": ["fermentation", "roasting", "braising"]
+        },
+        "keywords": {
+            "type": "array",
+            "items": { "type": "string" }
+        },
+        "servings": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "serving_size": {
+            "type": "string"
+        },
+        "yield": {
+            "type": "string",
+            "examples": ["1 pint", "32 ounces", "4 servings"]
+        },
+        "variations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["ingredient", "substitute"],
+                "properties": {
+                    "ingredient": {
+                        "type": "string",
+                        "description": "Name of the ingredient being varied"
+                    },
+                    "substitute": {
+                        "type": "string",
+                        "description": "Description of the substitution or variation"
+                    }
+                },
+                "additionalProperties": false
+            }
+        },
+        "notes": {
+            "type": "array",
+            "description": "Front-of-recipe notes a cook should see before starting: ingredient sourcing, substitutions, key warnings. In side-by-side layout these render in the left column with the ingredients; use endnotes for longer or after-the-fact content so the left column doesn't overflow.",
+            "items": { "type": "string" },
+            "minItems": 1
+        },
+        "endnotes": {
+            "type": "array",
+            "description": "End-of-recipe notes shown in their own section after instructions and variations: storage, serving suggestions, cultural background, troubleshooting — anything that doesn't need to be read before cooking.",
+            "items": { "type": "string" },
+            "minItems": 1
+        },
+        "components": {
+            "type": "array",
+            "minItems": 1,
+            "description": "One component for simple recipes, multiple for recipes with distinct preparation phases. A single untitled component renders as a flat recipe with no section headers.",
+            "items": {
+                "type": "object",
+                "anyOf": [
+                    { "required": ["ingredients"] },
+                    { "required": ["instructions"] }
+                ],
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Component name shown as a sub-header in both the ingredients and instructions sections. Omit for a single-component recipe."
+                    },
+                    "ingredients": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "required": ["name"],
+                            "properties": {
+                                "name": { "type": "string", "minLength": 1 },
+                                "amount": {
+                                    "type": "object",
+                                    "required": ["quantity"],
+                                    "properties": {
+                                        "quantity": { "type": "string", "minLength": 1 },
+                                        "unit": { "type": "string", "minLength": 1 }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "preparation": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "examples": ["finely chopped", "minced", "thinly sliced"]
+                                },
+                                "note": { "type": "string", "minLength": 1 }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "instructions": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "required": ["order", "task"],
+                            "properties": {
+                                "order": { "type": "integer", "minimum": 1 },
+                                "task": { "type": "string" }
+                            },
+                            "additionalProperties": false
+                        }
+                    }
+                },
+                "additionalProperties": false
+            }
+        }
+    },
+    "additionalProperties": false
+}
