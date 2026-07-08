@@ -119,10 +119,10 @@ def instruction_table(instructions, styles, text_width):
 
     rows = [
         [
-            Paragraph(str(step["order"]),    styles["step_num"]),
-            Paragraph(_fb(step["task"]),     styles["step_body"]),
+            Paragraph(str(i),             styles["step_num"]),
+            Paragraph(_fb(step["task"]),  styles["step_body"]),
         ]
-        for step in sorted(instructions, key=lambda s: int(s["order"]))
+        for i, step in enumerate(instructions, start=1)
     ]
 
     table = Table(rows, colWidths=[num_col, body_col], hAlign="LEFT")
@@ -168,15 +168,45 @@ def instruction_lines(instructions, styles):
         Paragraph(
             _fb(step["task"]),
             styles["step_line"],
-            bulletText=f'{step["order"]}.',
+            bulletText=f'{i}.',
         )
-        for step in sorted(instructions, key=lambda s: int(s["order"]))
+        for i, step in enumerate(instructions, start=1)
     ]
 
 
 def notes_list(notes, styles):
     """Bulleted paragraphs for recipe-level notes."""
     return [Paragraph(_fb(f"· {note}"), styles["note_item"]) for note in notes]
+
+
+def recipe_meta_parts(recipe):
+    """Build the meta-line strings for a recipe: servings, yield, method, time."""
+    parts = []
+    if "servings" in recipe:
+        parts.append(f"Serves {recipe['servings']}")
+    if "serving_size" in recipe:
+        parts.append(recipe["serving_size"])
+    if "yield" in recipe:
+        parts.append(f"Yield: {recipe['yield']}")
+    if "method" in recipe:
+        parts.append(recipe["method"].title())
+
+    time = recipe.get("time")
+    if time:
+        if "total" in time:
+            parts.append(f"Total: {time['total']}")
+        else:
+            breakdown = []
+            if "prep" in time:
+                breakdown.append(f"Prep {time['prep']}")
+            if "inactive" in time:
+                breakdown.append(f"Inactive {time['inactive']}")
+            if "cook" in time:
+                breakdown.append(f"Cook {time['cook']}")
+            if breakdown:
+                parts.append(" + ".join(breakdown))
+
+    return parts
 
 
 # ── Layout base class ───────────────────────────────────────────────────────
@@ -365,15 +395,7 @@ class StandardLayout(Layout):
         story.append(HRFlowable(width="100%", thickness=2,   color=theme.accent, spaceBefore=0, spaceAfter=3))
         story.append(HRFlowable(width="100%", thickness=0.5, color=theme.accent, spaceBefore=0, spaceAfter=8))
 
-        meta_parts = []
-        if "servings" in recipe:
-            meta_parts.append(f"Serves {recipe['servings']}")
-        if "serving_size" in recipe:
-            meta_parts.append(recipe["serving_size"])
-        if "yield" in recipe:
-            meta_parts.append(f"Yield: {recipe['yield']}")
-        if "method" in recipe:
-            meta_parts.append(recipe["method"].title())
+        meta_parts = recipe_meta_parts(recipe)
         if meta_parts:
             story.append(Paragraph("  ·  ".join(meta_parts), styles["meta"]))
 
@@ -709,15 +731,7 @@ class SideBySideLayout(Layout):
         components  = recipe["components"]
         use_headers = any(c.get("title") for c in components)
 
-        meta_parts = []
-        if "servings" in recipe:
-            meta_parts.append(f"Serves {recipe['servings']}")
-        if "serving_size" in recipe:
-            meta_parts.append(recipe["serving_size"])
-        if "yield" in recipe:
-            meta_parts.append(f"Yield: {recipe['yield']}")
-        if "method" in recipe:
-            meta_parts.append(recipe["method"].title())
+        meta_parts = recipe_meta_parts(recipe)
         if meta_parts:
             story.append(Paragraph("  ·  ".join(meta_parts), styles["meta"]))
 

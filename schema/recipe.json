@@ -3,7 +3,11 @@
     "title": "Recipe",
     "description": "A single recipe in the recipe book collection",
     "type": "object",
-    "required": ["title", "category", "yield", "components"],
+    "required": ["title", "category", "components"],
+    "anyOf": [
+        { "required": ["yield"] },
+        { "required": ["servings"] }
+    ],
     "properties": {
         "$schema": {
             "type": "string"
@@ -21,7 +25,8 @@
         },
         "keywords": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": { "type": "string" },
+            "minItems": 1
         },
         "servings": {
             "type": "integer",
@@ -34,8 +39,36 @@
             "type": "string",
             "examples": ["1 pint", "32 ounces", "4 servings"]
         },
+        "time": {
+            "type": "object",
+            "description": "Time breakdown shown in the meta line. All fields optional and freeform to allow ranges and phrasing (e.g. 'overnight', '3 to 5 days').",
+            "properties": {
+                "prep": {
+                    "type": "string",
+                    "description": "Active hands-on prep before cooking begins.",
+                    "examples": ["15 minutes", "30 minutes"]
+                },
+                "inactive": {
+                    "type": "string",
+                    "description": "Non-active waiting time: marinating, resting, chilling, rising, fermenting.",
+                    "examples": ["4 hours", "overnight", "3 to 5 days"]
+                },
+                "cook": {
+                    "type": "string",
+                    "description": "Active cooking time.",
+                    "examples": ["20 minutes", "1 hour"]
+                },
+                "total": {
+                    "type": "string",
+                    "description": "Total time start to finish. Shown instead of the prep/inactive/cook breakdown if present.",
+                    "examples": ["45 minutes", "1 day"]
+                }
+            },
+            "additionalProperties": false
+        },
         "variations": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "type": "object",
                 "required": ["ingredient", "substitute"],
@@ -109,11 +142,11 @@
                     "instructions": {
                         "type": "array",
                         "minItems": 1,
+                        "description": "Ordered list of steps; step numbers are derived from array position.",
                         "items": {
                             "type": "object",
-                            "required": ["order", "task"],
+                            "required": ["task"],
                             "properties": {
-                                "order": { "type": "integer", "minimum": 1 },
                                 "task": { "type": "string" }
                             },
                             "additionalProperties": false
