@@ -15,7 +15,8 @@ recipe-book/
 │   ├── recipe_to_pdf.py   # Generates a single recipe PDF
 │   ├── book_to_pdf.py     # Compiles a full recipe book PDF
 │   ├── layouts.py         # Page layout strategies
-│   └── themes.py          # Visual themes
+│   ├── themes.py          # Visual themes
+│   └── check_glyphs.py    # Verifies font glyph coverage for recipe text
 ├── output/           # Generated PDFs
 ├── images/           # Cover images
 └── gen_all.sh        # Batch script to generate everything
@@ -64,9 +65,15 @@ Each recipe is a JSON file in `recipes/` validated against `schema/recipe.json`.
     "category": "main",         // sauce, condiment, dessert, fermented vegetables, …
     "method": "braising",       // optional cooking method
     "keywords": ["beef", "hawaiian"],
-    "yield": "4 servings",
-    "servings": 4,              // optional
+    "yield": "4 servings",      // yield and/or servings — at least one is required
+    "servings": 4,
     "serving_size": "1 cup",    // optional
+    "time": {                   // optional; all fields freeform strings
+        "prep": "15 minutes",
+        "inactive": "4 hours",  // marinating, resting, chilling, fermenting
+        "cook": "20 minutes",
+        "total": "1 day"        // shown instead of the breakdown if present
+    },
     "components": [             // one component for simple recipes; multiple for distinct phases
         {
             "title": "Component Name",   // omit for single-component recipes
@@ -79,7 +86,7 @@ Each recipe is a JSON file in `recipes/` validated against `schema/recipe.json`.
                 }
             ],
             "instructions": [
-                { "order": 1, "task": "Season the beef generously with salt and pepper." }
+                { "task": "Season the beef generously with salt and pepper." }
             ]
         }
     ],
@@ -92,10 +99,22 @@ Each recipe is a JSON file in `recipes/` validated against `schema/recipe.json`.
 ```
 
 **Conventions:**
+- Instructions are numbered by their position in the array — there is no explicit step number field.
 - Ingredients are listed in order of use.
 - Ingredient names are not capitalized, except for proper nouns.
 - Measurement units are spelled out (e.g., `tablespoon`, not `tbsp`).
-- Quantities use Unicode fraction characters (e.g., `½`, `¾`).
+- Quantities use Unicode fraction characters (e.g., `½`, `¾`, `⅓`).
+
+**Fraction rendering:** not every font covers every Unicode fraction. Garamond
+(the body font in all themes) has the Latin-1 fractions `¼ ½ ¾` but lacks most
+of the Number Forms block (`⅓ ⅔ ⅕ ⅙ …`), so the layout code automatically
+renders any character in that block (U+2150–218F) in the DejaVu Serif fallback
+font, which covers them all. Any vulgar fraction is therefore safe to use in a
+recipe. To verify that every character in the recipe files has a glyph in the
+font that will render it, run:
+```sh
+python3 recipe_book/check_glyphs.py
+```
 
 ## Book JSON Format
 
@@ -134,5 +153,10 @@ Books generate a cover page, table of contents, section divider pages, and numbe
 - Python 3
 - [ReportLab](https://www.reportlab.com/) — PDF generation
 - [Pillow](https://python-pillow.org/) — cover image processing
-- [jsonschema](https://python-jsonschema.readthedocs.io/) — book validation
+- [jsonschema](https://python-jsonschema.readthedocs.io/) — recipe and book validation
 - Garamond and Arial Narrow fonts at `/usr/share/fonts/chromeos/monotype/`
+
+Install Python dependencies with:
+```sh
+pip install -r requirements.txt
+```
