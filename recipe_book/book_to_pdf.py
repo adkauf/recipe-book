@@ -17,7 +17,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 
 sys.path.insert(0, str(Path(__file__).parent))
 from layouts import LAYOUTS, STANDARD  # noqa: E402
-from recipe_to_pdf import load_recipe, register_fonts  # noqa: E402
+from recipe_to_pdf import load_recipe, register_fonts, validate_recipe  # noqa: E402
 from themes import CLASSIC, THEMES  # noqa: E402
 
 ROOT = Path(__file__).parent.parent
@@ -76,7 +76,8 @@ class BookDocTemplate(SimpleDocTemplate):
 
 def validate_book(book, book_path):
     """
-    Validate book data against the schema and check recipe file references.
+    Validate book data against the schema, check recipe file references,
+    and validate each referenced recipe against the recipe schema.
     Returns a list of error strings; empty list means valid.
     """
     errors = []
@@ -93,6 +94,9 @@ def validate_book(book, book_path):
             recipe_file = ROOT / "recipes" / f'{ref["file"]}.json'
             if not recipe_file.exists():
                 errors.append(f"Missing recipe file: recipes/{ref['file']}.json")
+                continue
+            recipe = load_recipe(recipe_file)
+            errors.extend(validate_recipe(recipe, f'recipes/{ref["file"]}.json'))
 
     return errors
 
