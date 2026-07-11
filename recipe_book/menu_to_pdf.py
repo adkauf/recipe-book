@@ -10,6 +10,8 @@ import jsonschema
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -20,6 +22,39 @@ from themes import CLASSIC, THEMES  # noqa: E402
 ROOT = Path(__file__).parent.parent
 
 _MENU_SCHEMA_PATH = ROOT / "schema" / "menu.json"
+
+# ── Elegant style fonts ────────────────────────────────────────────────────
+# EB Garamond ships as TrueType in the fonts-ebgaramond-extra Debian package.
+# Z003 (URW's Zapf Chancery, AGPL-3 with font exception) renders the menu
+# title; fonts/Z003-MediumItalic.ttf is a TrueType conversion of the CFF
+# original from fonts-urw-base35, which ReportLab cannot load directly.
+
+_EB_DIR = "/usr/share/fonts/truetype/ebgaramond"
+
+ELEGANT_FONT_FILES = {
+    "EBGaramond":        f"{_EB_DIR}/EBGaramond12-Regular.ttf",
+    "EBGaramond-Italic": f"{_EB_DIR}/EBGaramond12-Italic.ttf",
+    "Z003":              str(ROOT / "fonts" / "Z003-MediumItalic.ttf"),
+}
+
+# The chancery face renders only the menu title; body text stays EB Garamond.
+ELEGANT_TITLE_FONT = "Z003"
+
+_FLEURON      = "❦"          # ❦ floral heart
+_FLEURON_PAIR = "☙ ❧"   # ☙ ❧ mirrored pair
+
+
+def register_elegant_fonts():
+    """Register the EB Garamond faces used by the elegant style."""
+    missing = [path for path in ELEGANT_FONT_FILES.values() if not Path(path).exists()]
+    if missing:
+        raise FileNotFoundError(
+            "Font file(s) not found: "
+            + ", ".join(missing)
+            + " — install the fonts-ebgaramond-extra package."
+        )
+    for name, path in ELEGANT_FONT_FILES.items():
+        pdfmetrics.registerFont(TTFont(name, path))
 
 
 # ── Validation ─────────────────────────────────────────────────────────────
@@ -158,6 +193,114 @@ def make_menu_styles(theme):
     }
 
 
+def make_elegant_styles(theme):
+    """Return the style dict for the elegant menu-card presentation.
+
+    Typography is EB Garamond throughout; the theme supplies only colors,
+    so the print theme yields a pure black-ink card.
+    """
+    return {
+        "title": ParagraphStyle(
+            "MenuTitle",
+            fontName=ELEGANT_TITLE_FONT,
+            fontSize=42,
+            leading=50,
+            alignment=TA_CENTER,
+            textColor=theme.text,
+        ),
+        "subtitle": ParagraphStyle(
+            "MenuSubtitle",
+            fontName="EBGaramond-Italic",
+            fontSize=14,
+            leading=20,
+            alignment=TA_CENTER,
+            textColor=theme.medium,
+        ),
+        "meta": ParagraphStyle(
+            "MenuMeta",
+            fontName="EBGaramond-Italic",
+            fontSize=11,
+            leading=16,
+            alignment=TA_CENTER,
+            textColor=theme.light,
+        ),
+        "description": ParagraphStyle(
+            "MenuDescription",
+            fontName="EBGaramond",
+            fontSize=11.5,
+            leading=17,
+            alignment=TA_CENTER,
+            textColor=theme.medium,
+        ),
+        "meal_title": ParagraphStyle(
+            "MenuMealTitle",
+            fontName="EBGaramond",
+            fontSize=16,
+            leading=21,
+            alignment=TA_CENTER,
+            textColor=theme.text,
+            charSpace=4,
+        ),
+        "course_header": ParagraphStyle(
+            "MenuCourseHeader",
+            fontName="EBGaramond",
+            fontSize=11,
+            leading=15,
+            alignment=TA_CENTER,
+            textColor=theme.medium,
+            charSpace=4,
+        ),
+        "dish": ParagraphStyle(
+            "MenuDish",
+            fontName="EBGaramond",
+            fontSize=14,
+            leading=22,
+            alignment=TA_CENTER,
+            textColor=theme.text,
+        ),
+        "dish_note": ParagraphStyle(
+            "MenuDishNote",
+            fontName="EBGaramond-Italic",
+            fontSize=9.5,
+            leading=13,
+            alignment=TA_CENTER,
+            textColor=theme.light,
+        ),
+        "note_item": ParagraphStyle(
+            "MenuNoteItem",
+            fontName="EBGaramond-Italic",
+            fontSize=10,
+            leading=15,
+            alignment=TA_CENTER,
+            textColor=theme.light,
+            spaceBefore=3,
+        ),
+        "ornament": ParagraphStyle(
+            "MenuOrnament",
+            fontName="EBGaramond",
+            fontSize=11,
+            leading=13,
+            alignment=TA_CENTER,
+            textColor=theme.accent,
+        ),
+    }
+
+
+def _elegant_frame(canvas, doc, theme):
+    """Double hairline border frame drawn on every page."""
+    page_w, page_h = doc.pagesize
+    inset = 0.45 * inch
+    gap   = 5
+    canvas.saveState()
+    canvas.setStrokeColor(theme.text)
+    canvas.setLineWidth(1.0)
+    canvas.rect(inset, inset, page_w - 2 * inset, page_h - 2 * inset)
+    canvas.setLineWidth(0.4)
+    canvas.rect(inset + gap, inset + gap,
+                page_w - 2 * (inset + gap), page_h - 2 * (inset + gap))
+    canvas.restoreState()
+
+
 # ── Story assembly ─────────────────────────────────────────────────────────
 
 def _format_date(iso_date):
@@ -253,15 +396,78 @@ def build_menu_story(menu, styles, theme):
     return story
 
 
+def _elegant_course_flowables(course, styles):
+    """Return flowables for one course in the elegant style."""
+    story = [Spacer(1, 0.22 * inch)]
+    if course.get("title"):
+        story.append(Paragraph(f'— {pdf_text(course["title"].upper())} —',
+                               styles["course_header"]))
+        story.append(Spacer(1, 0.06 * inch))
+    for dish in course["dishes"]:
+        story.append(Paragraph(pdf_text(_dish_title(dish)), styles["dish"]))
+        if dish.get("note"):
+            story.append(Paragraph(pdf_text(dish["note"]), styles["dish_note"]))
+    if course.get("description"):
+        story.append(Paragraph(pdf_text(course["description"]), styles["dish_note"]))
+    return story
+
+
+def build_elegant_story(menu, styles):
+    """Assemble the flowables for the elegant menu-card presentation."""
+    story = []
+
+    story.append(Spacer(1, 0.3 * inch))
+    story.append(Paragraph(pdf_text(menu["title"]), styles["title"]))
+    story.append(Spacer(1, 0.05 * inch))
+    story.append(Paragraph(_FLEURON_PAIR, styles["ornament"]))
+    story.append(Spacer(1, 0.08 * inch))
+
+    if "subtitle" in menu:
+        story.append(Paragraph(pdf_text(menu["subtitle"]), styles["subtitle"]))
+
+    meta_parts = _menu_meta_parts(menu)
+    if meta_parts:
+        story.append(Paragraph(pdf_text("  ·  ".join(meta_parts)), styles["meta"]))
+
+    if "description" in menu:
+        story.append(Spacer(1, 0.1 * inch))
+        story.append(Paragraph(pdf_text(menu["description"]), styles["description"]))
+
+    for meal in menu["meals"]:
+        if meal.get("title"):
+            story.append(Spacer(1, 0.3 * inch))
+            story.append(Paragraph(pdf_text(meal["title"].upper()), styles["meal_title"]))
+        if meal.get("time"):
+            story.append(Paragraph(pdf_text(meal["time"]), styles["meta"]))
+        if meal.get("description"):
+            story.append(Spacer(1, 0.06 * inch))
+            story.append(Paragraph(pdf_text(meal["description"]), styles["description"]))
+        for course in meal["courses"]:
+            story.extend(_elegant_course_flowables(course, styles))
+
+    if menu.get("notes"):
+        story.append(Spacer(1, 0.45 * inch))
+        story.append(Paragraph(_FLEURON, styles["ornament"]))
+        story.append(Spacer(1, 0.08 * inch))
+        for note in menu["notes"]:
+            story.append(Paragraph(pdf_text(note), styles["note_item"]))
+
+    return story
+
+
 # ── Generator ──────────────────────────────────────────────────────────────
 
-def menu_to_pdf(menu_path, output_dir, theme=CLASSIC, layout=STANDARD):
+def menu_to_pdf(menu_path, output_dir, theme=CLASSIC, layout=STANDARD, style="classic"):
     """Convert a menu JSON file to a PDF and return the output path.
 
     The layout argument supplies only the page size; menus always render as
-    a single centered column regardless of the recipe layout chosen.
+    a single centered column regardless of the recipe layout chosen. The
+    elegant style sets EB Garamond throughout, draws a double hairline
+    border frame, and uses its own margins; the theme supplies only colors.
     """
     register_fonts()
+    if style == "elegant":
+        register_elegant_fonts()
 
     menu_path = Path(menu_path)
     menu      = json.loads(menu_path.read_text(encoding="utf-8"))
@@ -274,7 +480,10 @@ def menu_to_pdf(menu_path, output_dir, theme=CLASSIC, layout=STANDARD):
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{menu_path.stem}.pdf"
 
-    margin = theme.margin * inch
+    if style == "elegant":
+        h_margin, v_margin = 1.1 * inch, 0.9 * inch
+    else:
+        h_margin = v_margin = theme.margin * inch
 
     keywords = ["menu", menu.get("occasion", "")]
     keywords = [k for k in keywords if k]
@@ -282,17 +491,23 @@ def menu_to_pdf(menu_path, output_dir, theme=CLASSIC, layout=STANDARD):
     doc = SimpleDocTemplate(
         str(output_path),
         pagesize=layout.page_size,
-        leftMargin=margin,
-        rightMargin=margin,
-        topMargin=margin,
-        bottomMargin=margin,
+        leftMargin=h_margin,
+        rightMargin=h_margin,
+        topMargin=v_margin,
+        bottomMargin=v_margin,
         title=menu["title"],
         subject=menu.get("occasion", ""),
         keywords=", ".join(keywords),
     )
 
-    styles = make_menu_styles(theme)
-    doc.build(build_menu_story(menu, styles, theme))
+    if style == "elegant":
+        story = build_elegant_story(menu, make_elegant_styles(theme))
+        def draw_frame(canvas, doc_):
+            _elegant_frame(canvas, doc_, theme)
+        doc.build(story, onFirstPage=draw_frame, onLaterPages=draw_frame)
+    else:
+        styles = make_menu_styles(theme)
+        doc.build(build_menu_story(menu, styles, theme))
     return output_path
 
 
@@ -319,6 +534,13 @@ def main():
         default="standard",
         help="Accepted for CLI consistency; menus use only the layout's page size",
     )
+    parser.add_argument(
+        "--style",
+        choices=["classic", "elegant"],
+        default="classic",
+        help="Menu-card presentation: classic matches the recipe styling; "
+             "elegant is an EB Garamond card with a border frame (default: classic)",
+    )
     args = parser.parse_args()
 
     default_output = ROOT / "output"
@@ -330,6 +552,7 @@ def main():
             output_dir,
             theme=THEMES[args.theme],
             layout=LAYOUTS[args.layout],
+            style=args.style,
         )
         print(f"Written to {output_path}")
     except (FileNotFoundError, ValueError) as exc:

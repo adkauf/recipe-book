@@ -42,7 +42,7 @@ echo "Wrote ${bc} books."
 mc=0
 for menu in menus/*.json; do
     [ -e "${menu}" ] || continue
-    if python3 recipe_book/menu_to_pdf.py "${menu}" --theme "${theme}" --layout "${layout}"; then
+    if python3 recipe_book/menu_to_pdf.py "${menu}" --theme "${theme}" --layout "${layout}" --style elegant; then
         mc=$((mc + 1))
     else
         echo "FAILED: ${menu}" >&2

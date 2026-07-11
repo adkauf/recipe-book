@@ -21,6 +21,7 @@ recipe-book/
 │   └── check_glyphs.py    # Verifies font glyph coverage for recipe/book text
 ├── output/           # Generated PDFs
 ├── images/           # Cover images (private, not tracked)
+├── fonts/            # Fonts shipped with the project (see Dependencies)
 └── scripts/
     ├── gen_all.sh        # Batch script to generate everything
     ├── publish.sh        # Copy generated PDFs to Google Drive (ChromeOS)
@@ -66,10 +67,13 @@ as meals → courses → dishes; a dish either references a library recipe by
 filename stem (`"file"`) or is a plain `"name"` for store-bought and
 no-recipe items.
 ```sh
-python3 recipe_book/menu_to_pdf.py menus/thanksgiving-dinner.json --theme print
+python3 recipe_book/menu_to_pdf.py menus/thanksgiving-dinner.json --theme print --style elegant
 ```
 Renders a centered menu-card PDF; dishes referencing recipes print the
-recipe's title. `gen_all.sh` also generates all menus.
+recipe's title. `--style` picks the presentation: `classic` (default)
+matches the recipe styling; `elegant` is an EB Garamond card with a
+chancery script title, fleuron ornaments, and a double hairline border
+frame. `gen_all.sh` also generates all menus (using the elegant style).
 
 **Back up / restore private content (recipes, books, menus, cover images):**
 ```sh
@@ -197,6 +201,12 @@ Books generate a cover page, table of contents, section divider pages, and numbe
 - [Pillow](https://python-pillow.org/) — cover image processing
 - [jsonschema](https://python-jsonschema.readthedocs.io/) — recipe and book validation
 - Garamond and Arial Narrow fonts at `/usr/share/fonts/chromeos/monotype/`
+- EB Garamond TrueType fonts (`fonts-ebgaramond-extra` Debian package) —
+  only needed for the elegant menu style
+- `fonts/Z003-MediumItalic.ttf` — URW Zapf Chancery for elegant menu
+  titles, shipped in the repo (AGPL-3 with font exception); a TrueType
+  conversion of the CFF original from `fonts-urw-base35`, which ReportLab
+  cannot load directly
 
 Install Python dependencies with:
 ```sh
