@@ -1,8 +1,8 @@
 output
 __pycache__
 .vscode
-# Private content — not tracked; back up with ./drive_backup.sh
+# Private content — not tracked; back up with ./scripts/drive_backup.sh
 books/
 images/
 recipes/
-claude.md
+CLAUDE.md
