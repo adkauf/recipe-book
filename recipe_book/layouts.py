@@ -1,6 +1,7 @@
 """Page layout strategies for recipe PDFs."""
 
 from abc import ABC, abstractmethod
+from xml.sax.saxutils import escape
 
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import LETTER
@@ -16,8 +17,15 @@ _FrameBreakType = type(FrameBreak())
 _FALLBACK_FONT = "DejaVuSerif"
 
 
-def _fb(text):
-    """Wrap Unicode Number Forms characters (U+2150–U+218F) in a fallback font tag."""
+def pdf_text(text):
+    """Make arbitrary JSON text safe for a Platypus Paragraph.
+
+    Escapes XML special characters (Paragraph parses its text as mini-XML, so
+    unescaped input like 'heat to 350<F' is a syntax error and '<b>…</b>'
+    silently becomes formatting), then wraps Unicode Number Forms characters
+    (U+2150–U+218F) in a fallback font tag.
+    """
+    text = escape(text)
     if not any(0x2150 <= ord(ch) <= 0x218F for ch in text):
         return text
     return "".join(
@@ -43,7 +51,7 @@ def component_subheading(label, styles):
     """Italic sub-header for a named component within a section."""
     return [
         Spacer(1, 0.15 * inch),
-        Paragraph(label, styles["component_header"]),
+        Paragraph(pdf_text(label), styles["component_header"]),
         Spacer(1, 0.06 * inch),
     ]
 
@@ -61,11 +69,11 @@ def ingredient_table(ingredients, styles, text_width, qty_col=1.4 * inch):
         if "preparation" in ing:
             name += f", {ing['preparation']}"
 
-        qty_cell  = Paragraph(_fb(qty),  styles["ingredient_qty"])
-        name_cell = Paragraph(_fb(name), styles["ingredient_name"])
+        qty_cell  = Paragraph(pdf_text(qty),  styles["ingredient_qty"])
+        name_cell = Paragraph(pdf_text(name), styles["ingredient_name"])
 
         if "note" in ing:
-            name_content = [name_cell, Paragraph(_fb(ing["note"]), styles["ingredient_note"])]
+            name_content = [name_cell, Paragraph(pdf_text(ing["note"]), styles["ingredient_note"])]
         else:
             name_content = name_cell
 
@@ -89,8 +97,8 @@ def variations_table(variations, styles, text_width):
 
     rows = [
         [
-            Paragraph(_fb(v["ingredient"]), styles["variation_ingredient"]),
-            Paragraph(_fb(v["substitute"]), styles["variation_text"]),
+            Paragraph(pdf_text(v["ingredient"]), styles["variation_ingredient"]),
+            Paragraph(pdf_text(v["substitute"]), styles["variation_text"]),
         ]
         for v in variations
     ]
@@ -120,7 +128,7 @@ def instruction_table(instructions, styles, text_width):
     rows = [
         [
             Paragraph(str(i),             styles["step_num"]),
-            Paragraph(_fb(step["task"]),  styles["step_body"]),
+            Paragraph(pdf_text(step["task"]),  styles["step_body"]),
         ]
         for i, step in enumerate(instructions, start=1)
     ]
@@ -149,9 +157,9 @@ def variations_lines(variations, styles, theme):
     for v in variations:
         label = (
             f'<font name="{italic}" color="{accent}">'
-            f'{_fb(v["ingredient"])}</font>'
+            f'{pdf_text(v["ingredient"])}</font>'
         )
-        text  = f'{label} — {_fb(v["substitute"])}'
+        text  = f'{label} — {pdf_text(v["substitute"])}'
         items.append(Paragraph(text, styles["variation_line"]))
     return items
 
@@ -166,7 +174,7 @@ def instruction_lines(instructions, styles):
     """
     return [
         Paragraph(
-            _fb(step["task"]),
+            pdf_text(step["task"]),
             styles["step_line"],
             bulletText=f'{i}.',
         )
@@ -176,7 +184,7 @@ def instruction_lines(instructions, styles):
 
 def notes_list(notes, styles):
     """Bulleted paragraphs for recipe-level notes."""
-    return [Paragraph(_fb(f"· {note}"), styles["note_item"]) for note in notes]
+    return [Paragraph(pdf_text(f"· {note}"), styles["note_item"]) for note in notes]
 
 
 def recipe_meta_parts(recipe):
@@ -391,13 +399,13 @@ class StandardLayout(Layout):
     def build_story(self, recipe, styles, text_width, theme):
         story = []
 
-        story.append(Paragraph(recipe["title"], styles["title"]))
+        story.append(Paragraph(pdf_text(recipe["title"]), styles["title"]))
         story.append(HRFlowable(width="100%", thickness=2,   color=theme.accent, spaceBefore=0, spaceAfter=3))
         story.append(HRFlowable(width="100%", thickness=0.5, color=theme.accent, spaceBefore=0, spaceAfter=8))
 
         meta_parts = recipe_meta_parts(recipe)
         if meta_parts:
-            story.append(Paragraph("  ·  ".join(meta_parts), styles["meta"]))
+            story.append(Paragraph(pdf_text("  ·  ".join(meta_parts)), styles["meta"]))
 
         components  = recipe["components"]
         use_headers = any(c.get("title") for c in components)
@@ -532,9 +540,9 @@ class SideBySideLayout(Layout):
             if "preparation" in ing:
                 name += f', {ing["preparation"]}'
             parts.append(name)
-            items.append(Paragraph(_fb(" ".join(parts)), styles["ingredient_line"]))
+            items.append(Paragraph(pdf_text(" ".join(parts)), styles["ingredient_line"]))
             if "note" in ing:
-                items.append(Paragraph(_fb(ing["note"]), styles["ingredient_note_line"]))
+                items.append(Paragraph(pdf_text(ing["note"]), styles["ingredient_note_line"]))
         return items
 
     def configure_book_doc(self, doc, theme, **kwargs):
@@ -578,12 +586,12 @@ class SideBySideLayout(Layout):
         entries = recipe_data if recipe_data else [("", None)]
         for i, (title, note) in enumerate(entries):
             if title:
-                _, th = Paragraph(title, title_style).wrap(text_w, 9999 * inch)
+                _, th = Paragraph(pdf_text(title), title_style).wrap(text_w, 9999 * inch)
                 title_h = th + 18  # HRs + small buffer
             else:
                 title_h = (theme.title_size + 6) * 2 + 20
             if note:
-                _, nh = Paragraph(f'"{note}"', note_style).wrap(text_w, 9999 * inch)
+                _, nh = Paragraph(pdf_text(f'"{note}"'), note_style).wrap(text_w, 9999 * inch)
                 title_h += nh + 0.15 * inch  # note paragraph + Spacer below it
 
             body_h = text_h - title_h
@@ -660,7 +668,7 @@ class SideBySideLayout(Layout):
                 fontSize=theme.title_size,
                 leading=theme.title_size + 6,
             )
-            _, para_h = Paragraph(recipe_title, _style).wrap(text_w, 9999 * inch)
+            _, para_h = Paragraph(pdf_text(recipe_title), _style).wrap(text_w, 9999 * inch)
             # para_h + spaceAfter (8) + two HR lines (~6) + small buffer (4)
             title_h = para_h + 18
         else:
@@ -722,7 +730,7 @@ class SideBySideLayout(Layout):
         story.append(NextPageTemplate("recipe_body"))
 
         # ── Title frame (full width) ────────────────────────────────────────
-        story.append(Paragraph(recipe["title"], styles["title"]))
+        story.append(Paragraph(pdf_text(recipe["title"]), styles["title"]))
         story.append(HRFlowable(width="100%", thickness=2,   color=theme.accent, spaceBefore=0, spaceAfter=3))
         story.append(HRFlowable(width="100%", thickness=0.5, color=theme.accent, spaceBefore=0, spaceAfter=0))
         story.append(FrameBreak())  # → left frame
@@ -733,13 +741,18 @@ class SideBySideLayout(Layout):
 
         meta_parts = recipe_meta_parts(recipe)
         if meta_parts:
-            story.append(Paragraph("  ·  ".join(meta_parts), styles["meta"]))
+            story.append(Paragraph(pdf_text("  ·  ".join(meta_parts)), styles["meta"]))
 
-        for i, component in enumerate(components):
-            if component.get("ingredients"):
-                story.extend(self._ingredient_lines(component["ingredients"], styles))
-            if i < len(components) - 1:
+        first_group = True
+        for component in components:
+            if not component.get("ingredients"):
+                continue
+            if not first_group:
                 story.append(Spacer(1, 0.25 * inch))
+            if use_headers and component.get("title"):
+                story.extend(component_subheading(component["title"], styles))
+            story.extend(self._ingredient_lines(component["ingredients"], styles))
+            first_group = False
 
         if recipe.get("notes"):
             story.extend(section_heading("Notes", styles, theme))
@@ -751,13 +764,16 @@ class SideBySideLayout(Layout):
         # Instructions are individual Paragraphs (not a Table) so they reflow
         # to whatever frame they land in — narrow on the page-1 right column,
         # full page width on overflow pages.
-        for i, component in enumerate(components):
+        first_group = True
+        for component in components:
+            if not component.get("instructions"):
+                continue
+            if not first_group:
+                story.append(Spacer(1, 0.25 * inch))
             if use_headers and component.get("title"):
                 story.extend(component_subheading(component["title"], styles))
-            if component.get("instructions"):
-                story.extend(instruction_lines(component["instructions"], styles))
-            if i < len(components) - 1:
-                story.append(Spacer(1, 0.25 * inch))
+            story.extend(instruction_lines(component["instructions"], styles))
+            first_group = False
 
         if recipe.get("variations"):
             story.extend(section_heading("Variations", styles, theme))
