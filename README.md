@@ -10,7 +10,8 @@ A Python tool for generating professional recipe PDFs from JSON source data. Rec
 recipe-book/
 ├── recipes/          # Individual recipe JSON files (private, not tracked)
 ├── books/            # Recipe book definitions (private, not tracked)
-├── schema/           # JSON schemas for recipes and books
+├── menus/            # Menu plans for meals or whole days (private, not tracked)
+├── schema/           # JSON schemas for recipes, books, and menus
 ├── recipe_book/      # Python source
 │   ├── recipe_to_pdf.py   # Generates a single recipe PDF
 │   ├── book_to_pdf.py     # Compiles a full recipe book PDF
@@ -25,8 +26,8 @@ recipe-book/
     └── drive_backup.sh   # Back up / restore private content via Google Drive
 ```
 
-The `recipes/`, `books/`, and `images/` directories contain private content
-and are excluded from version control via `.gitignore`. Use
+The `recipes/`, `books/`, `menus/`, and `images/` directories contain
+private content and are excluded from version control via `.gitignore`. Use
 `drive_backup.sh` (below) to keep them backed up.
 
 ## Usage
@@ -58,9 +59,15 @@ mount. Requires sharing Google Drive with Linux once (Files app →
 right-click "Google Drive" → "Share with Linux"). Override the destination
 with the `RECIPE_PUBLISH_DIR` environment variable.
 
-**Back up / restore private content (recipes, books, cover images):**
+**Menus:** plan a single meal (e.g. Thanksgiving dinner) or a whole day of
+meals in `menus/*.json`, validated by `schema/menu.json`. Menus are organized
+as meals → courses → dishes; a dish either references a library recipe by
+filename stem (`"file"`) or is a plain `"name"` for store-bought and
+no-recipe items. There is no PDF generator for menus yet.
+
+**Back up / restore private content (recipes, books, menus, cover images):**
 ```sh
-./scripts/drive_backup.sh backup    # mirror recipes/, books/, images/ to Google Drive
+./scripts/drive_backup.sh backup    # mirror recipes/, books/, menus/, images/ to Google Drive
 ./scripts/drive_backup.sh restore   # copy them back from Google Drive
 ```
 Uses the same ChromeOS Drive mount as `publish.sh` (requires the one-time
