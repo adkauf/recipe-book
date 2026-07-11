@@ -63,10 +63,9 @@ with the `RECIPE_PUBLISH_DIR` environment variable.
 ./scripts/drive_backup.sh backup    # mirror recipes/, books/, images/ to Google Drive
 ./scripts/drive_backup.sh restore   # copy them back from Google Drive
 ```
-Requires [rclone](https://rclone.org/) with a configured Google Drive remote
-(run `rclone config` once and name the remote `gdrive`). The backup location
-defaults to `gdrive:recipe-book-backup`; override it with a second argument
-(`./scripts/drive_backup.sh backup mydrive:some/path`) or the `RECIPE_BACKUP_REMOTE`
+Uses the same ChromeOS Drive mount as `publish.sh` (requires the one-time
+"Share with Linux" step described above). The backup location defaults to
+`MyDrive/Recipe Book`; override it with the `RECIPE_BACKUP_DIR`
 environment variable. `backup` mirrors the local state (deletions included);
 `restore` only adds or updates local files, never deletes them.
 
@@ -185,7 +184,6 @@ Books generate a cover page, table of contents, section divider pages, and numbe
 - [Pillow](https://python-pillow.org/) — cover image processing
 - [jsonschema](https://python-jsonschema.readthedocs.io/) — recipe and book validation
 - Garamond and Arial Narrow fonts at `/usr/share/fonts/chromeos/monotype/`
-- [rclone](https://rclone.org/) — optional, only needed for `drive_backup.sh`
 
 Install Python dependencies with:
 ```sh

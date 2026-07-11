@@ -1,56 +1,67 @@
 #!/bin/sh
 # Back up or restore the private recipes/, books/, and images/ directories
-# to/from Google Drive using rclone.
+# to/from Google Drive via the ChromeOS Drive mount.
 #
-# One-time setup:
-#   1. Install rclone: https://rclone.org/install/
-#   2. Run `rclone config` and create a Google Drive remote named "gdrive"
-#      (or any name — pass it as the second argument or set
-#      RECIPE_BACKUP_REMOTE).
+# ChromeOS mounts Google Drive into the Linux container once it is shared:
+# Files app -> right-click "Google Drive" -> "Share with Linux".
 #
 # Usage:
-#   ./scripts/drive_backup.sh backup  [remote:path]   # mirror local -> Drive
-#   ./scripts/drive_backup.sh restore [remote:path]   # copy Drive -> local
+#   ./scripts/drive_backup.sh backup    # mirror local -> Drive
+#   ./scripts/drive_backup.sh restore   # copy Drive -> local
 #
-# backup uses `rclone sync`, so files deleted locally are also removed from
-# the Drive copy. restore uses `rclone copy`, which never deletes local
-# files — it only adds or updates them.
+# backup replaces the Drive copy of each directory wholesale, so files
+# deleted locally are also removed from the Drive copy (Drive keeps them
+# in its trash for 30 days). restore never deletes local files — it only
+# adds or updates them.
 set -u
 cd "$(dirname "$0")/.."
 
-REMOTE="${RECIPE_BACKUP_REMOTE:-gdrive:recipe-book-backup}"
+dest="${RECIPE_BACKUP_DIR:-/mnt/chromeos/GoogleDrive/MyDrive/Recipe Book}"
 DIRS="recipes books images"
 
 usage() {
-    echo "usage: $0 backup|restore [remote:path]" >&2
-    echo "  default remote: ${REMOTE}" >&2
+    echo "usage: $0 backup|restore" >&2
+    echo "  backup location: ${dest} (override with RECIPE_BACKUP_DIR)" >&2
     exit 2
 }
 
-[ $# -ge 1 ] || usage
+[ $# -eq 1 ] || usage
 cmd=$1
-[ $# -ge 2 ] && REMOTE=$2
 
-if ! command -v rclone >/dev/null 2>&1; then
-    echo "Error: rclone not found. Install it and run 'rclone config' to set up a Google Drive remote." >&2
+if [ ! -d /mnt/chromeos/GoogleDrive ]; then
+    echo "Google Drive is not shared with Linux."
+    echo "In the ChromeOS Files app, right-click 'Google Drive' and choose 'Share with Linux', then re-run."
     exit 1
 fi
 
 case "${cmd}" in
     backup)
+        if ! mkdir -p "${dest}"; then
+            echo "Cannot create ${dest}." >&2
+            echo "If only some Drive folders are shared with Linux, the MyDrive root is read-only." >&2
+            echo "Either share all of Google Drive with Linux, or create the backup folder in Drive," >&2
+            echo "share it with Linux, and point RECIPE_BACKUP_DIR at it." >&2
+            exit 1
+        fi
         for d in ${DIRS}; do
             if [ ! -d "${d}" ]; then
                 echo "Skipping ${d}/ (not present locally)"
                 continue
             fi
-            echo "Backing up ${d}/ -> ${REMOTE}/${d}"
-            rclone sync "${d}" "${REMOTE}/${d}" --progress || exit 1
+            echo "Backing up ${d}/ -> ${dest}/${d}"
+            rm -rf "${dest}/${d}" || exit 1
+            cp -r "${d}" "${dest}/${d}" || exit 1
         done
         ;;
     restore)
         for d in ${DIRS}; do
-            echo "Restoring ${REMOTE}/${d} -> ${d}/"
-            rclone copy "${REMOTE}/${d}" "${d}" --progress || exit 1
+            if [ ! -d "${dest}/${d}" ]; then
+                echo "Skipping ${d}/ (no backup found at ${dest}/${d})"
+                continue
+            fi
+            echo "Restoring ${dest}/${d} -> ${d}/"
+            mkdir -p "${d}"
+            cp -r "${dest}/${d}/." "${d}/" || exit 1
         done
         ;;
     *)
