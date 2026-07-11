@@ -4,5 +4,6 @@ __pycache__
 # Private content — not tracked; back up with ./scripts/drive_backup.sh
 books/
 images/
+menus/
 recipes/
 CLAUDE.md

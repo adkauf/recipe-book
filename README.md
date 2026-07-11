@@ -10,10 +10,12 @@ A Python tool for generating professional recipe PDFs from JSON source data. Rec
 recipe-book/
 ├── recipes/          # Individual recipe JSON files (private, not tracked)
 ├── books/            # Recipe book definitions (private, not tracked)
-├── schema/           # JSON schemas for recipes and books
+├── menus/            # Menu plans for meals or whole days (private, not tracked)
+├── schema/           # JSON schemas for recipes, books, and menus
 ├── recipe_book/      # Python source
 │   ├── recipe_to_pdf.py   # Generates a single recipe PDF
 │   ├── book_to_pdf.py     # Compiles a full recipe book PDF
+│   ├── menu_to_pdf.py     # Generates a menu-card PDF
 │   ├── layouts.py         # Page layout strategies
 │   ├── themes.py          # Visual themes
 │   └── check_glyphs.py    # Verifies font glyph coverage for recipe/book text
@@ -25,8 +27,8 @@ recipe-book/
     └── drive_backup.sh   # Back up / restore private content via Google Drive
 ```
 
-The `recipes/`, `books/`, and `images/` directories contain private content
-and are excluded from version control via `.gitignore`. Use
+The `recipes/`, `books/`, `menus/`, and `images/` directories contain
+private content and are excluded from version control via `.gitignore`. Use
 `drive_backup.sh` (below) to keep them backed up.
 
 ## Usage
@@ -58,9 +60,20 @@ mount. Requires sharing Google Drive with Linux once (Files app →
 right-click "Google Drive" → "Share with Linux"). Override the destination
 with the `RECIPE_PUBLISH_DIR` environment variable.
 
-**Back up / restore private content (recipes, books, cover images):**
+**Menu:** plan a single meal (e.g. Thanksgiving dinner) or a whole day of
+meals in `menus/*.json`, validated by `schema/menu.json`. Menus are organized
+as meals → courses → dishes; a dish either references a library recipe by
+filename stem (`"file"`) or is a plain `"name"` for store-bought and
+no-recipe items.
 ```sh
-./scripts/drive_backup.sh backup    # mirror recipes/, books/, images/ to Google Drive
+python3 recipe_book/menu_to_pdf.py menus/thanksgiving-dinner.json --theme print
+```
+Renders a centered menu-card PDF; dishes referencing recipes print the
+recipe's title. `gen_all.sh` also generates all menus.
+
+**Back up / restore private content (recipes, books, menus, cover images):**
+```sh
+./scripts/drive_backup.sh backup    # mirror recipes/, books/, menus/, images/ to Google Drive
 ./scripts/drive_backup.sh restore   # copy them back from Google Drive
 ```
 Uses the same ChromeOS Drive mount as `publish.sh` (requires the one-time

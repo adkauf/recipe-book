@@ -57,11 +57,12 @@ def _text_chars(value):
             yield from _text_chars(v)
 
 
-def check_glyphs(globs=("recipes/*.json", "books/*.json")):
+def check_glyphs(globs=("recipes/*.json", "books/*.json", "menus/*.json")):
     """Return error strings for characters lacking a glyph in their font.
 
-    Book files are checked too: their titles, descriptions, section titles,
-    and editorial notes all render into the PDF in the same body fonts.
+    Book and menu files are checked too: their titles, descriptions, section
+    titles, dish names, and notes all render into the PDF in the same body
+    fonts.
     """
     coverage = {
         name: TTFontFile(path).charToGlyph for name, path in FONT_FILES.items()

@@ -39,6 +39,18 @@ for book in books/*.json; do
 done
 echo "Wrote ${bc} books."
 
+mc=0
+for menu in menus/*.json; do
+    [ -e "${menu}" ] || continue
+    if python3 recipe_book/menu_to_pdf.py "${menu}" --theme "${theme}" --layout "${layout}"; then
+        mc=$((mc + 1))
+    else
+        echo "FAILED: ${menu}" >&2
+        failures=$((failures + 1))
+    fi
+done
+echo "Wrote ${mc} menus."
+
 if [ "${failures}" -gt 0 ]; then
     echo "${failures} generation(s) failed." >&2
     exit 1
