@@ -1,7 +1,7 @@
 #!/bin/sh
 # Generate all recipes and books. Exits non-zero if anything failed.
 set -u
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 layout="sidebyside"
 theme="print"
