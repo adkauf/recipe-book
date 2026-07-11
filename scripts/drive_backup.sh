@@ -9,14 +9,14 @@
 #      RECIPE_BACKUP_REMOTE).
 #
 # Usage:
-#   ./drive_backup.sh backup  [remote:path]   # mirror local -> Drive
-#   ./drive_backup.sh restore [remote:path]   # copy Drive -> local
+#   ./scripts/drive_backup.sh backup  [remote:path]   # mirror local -> Drive
+#   ./scripts/drive_backup.sh restore [remote:path]   # copy Drive -> local
 #
 # backup uses `rclone sync`, so files deleted locally are also removed from
 # the Drive copy. restore uses `rclone copy`, which never deletes local
 # files — it only adds or updates them.
 set -u
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 REMOTE="${RECIPE_BACKUP_REMOTE:-gdrive:recipe-book-backup}"
 DIRS="recipes books images"

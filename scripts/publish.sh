@@ -4,6 +4,8 @@
 # ChromeOS mounts Google Drive into the Linux container once it is shared:
 # Files app -> right-click "Google Drive" -> "Share with Linux".
 # After that, copying to the mount below syncs to Drive automatically.
+set -u
+cd "$(dirname "$0")/.."
 
 dest="${RECIPE_PUBLISH_DIR:-/mnt/chromeos/GoogleDrive/MyDrive/Recipes}"
 
