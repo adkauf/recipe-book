@@ -15,6 +15,7 @@ recipe-book/
 ├── recipe_book/      # Python source
 │   ├── recipe_to_pdf.py   # Generates a single recipe PDF
 │   ├── book_to_pdf.py     # Compiles a full recipe book PDF
+│   ├── menu_to_pdf.py     # Generates a menu-card PDF
 │   ├── layouts.py         # Page layout strategies
 │   ├── themes.py          # Visual themes
 │   └── check_glyphs.py    # Verifies font glyph coverage for recipe/book text
@@ -59,11 +60,16 @@ mount. Requires sharing Google Drive with Linux once (Files app →
 right-click "Google Drive" → "Share with Linux"). Override the destination
 with the `RECIPE_PUBLISH_DIR` environment variable.
 
-**Menus:** plan a single meal (e.g. Thanksgiving dinner) or a whole day of
+**Menu:** plan a single meal (e.g. Thanksgiving dinner) or a whole day of
 meals in `menus/*.json`, validated by `schema/menu.json`. Menus are organized
 as meals → courses → dishes; a dish either references a library recipe by
 filename stem (`"file"`) or is a plain `"name"` for store-bought and
-no-recipe items. There is no PDF generator for menus yet.
+no-recipe items.
+```sh
+python3 recipe_book/menu_to_pdf.py menus/thanksgiving-dinner.json --theme print
+```
+Renders a centered menu-card PDF; dishes referencing recipes print the
+recipe's title. `gen_all.sh` also generates all menus.
 
 **Back up / restore private content (recipes, books, menus, cover images):**
 ```sh
