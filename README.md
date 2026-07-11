@@ -8,19 +8,24 @@ A Python tool for generating professional recipe PDFs from JSON source data. Rec
 
 ```
 recipe-book/
-├── recipes/          # Individual recipe JSON files
-├── books/            # Recipe book definitions
+├── recipes/          # Individual recipe JSON files (private, not tracked)
+├── books/            # Recipe book definitions (private, not tracked)
 ├── schema/           # JSON schemas for recipes and books
 ├── recipe_book/      # Python source
 │   ├── recipe_to_pdf.py   # Generates a single recipe PDF
 │   ├── book_to_pdf.py     # Compiles a full recipe book PDF
 │   ├── layouts.py         # Page layout strategies
 │   ├── themes.py          # Visual themes
-│   └── check_glyphs.py    # Verifies font glyph coverage for recipe text
+│   └── check_glyphs.py    # Verifies font glyph coverage for recipe/book text
 ├── output/           # Generated PDFs
-├── images/           # Cover images
-└── gen_all.sh        # Batch script to generate everything
+├── images/           # Cover images (private, not tracked)
+├── gen_all.sh        # Batch script to generate everything
+└── drive_backup.sh   # Back up / restore private content via Google Drive
 ```
+
+The `recipes/`, `books/`, and `images/` directories contain private content
+and are excluded from version control via `.gitignore`. Use
+`drive_backup.sh` (below) to keep them backed up.
 
 ## Usage
 
@@ -38,7 +43,21 @@ python3 recipe_book/book_to_pdf.py books/island-cooking.json --theme print --lay
 ```sh
 ./gen_all.sh
 ```
-`gen_all.sh` defaults to `--theme print --layout sidebyside`.
+`gen_all.sh` defaults to `--theme print --layout sidebyside`. It runs the
+glyph coverage check first and exits with a non-zero status if the check or
+any generation fails.
+
+**Back up / restore private content (recipes, books, cover images):**
+```sh
+./drive_backup.sh backup    # mirror recipes/, books/, images/ to Google Drive
+./drive_backup.sh restore   # copy them back from Google Drive
+```
+Requires [rclone](https://rclone.org/) with a configured Google Drive remote
+(run `rclone config` once and name the remote `gdrive`). The backup location
+defaults to `gdrive:recipe-book-backup`; override it with a second argument
+(`./drive_backup.sh backup mydrive:some/path`) or the `RECIPE_BACKUP_REMOTE`
+environment variable. `backup` mirrors the local state (deletions included);
+`restore` only adds or updates local files, never deletes them.
 
 ### Options
 
@@ -155,6 +174,7 @@ Books generate a cover page, table of contents, section divider pages, and numbe
 - [Pillow](https://python-pillow.org/) — cover image processing
 - [jsonschema](https://python-jsonschema.readthedocs.io/) — recipe and book validation
 - Garamond and Arial Narrow fonts at `/usr/share/fonts/chromeos/monotype/`
+- [rclone](https://rclone.org/) — optional, only needed for `drive_backup.sh`
 
 Install Python dependencies with:
 ```sh

@@ -12,17 +12,27 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import HRFlowable, Image, NextPageTemplate, PageBreak, Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import Flowable, HRFlowable, Image, NextPageTemplate, PageBreak, Paragraph, SimpleDocTemplate, Spacer
 from reportlab.platypus.tableofcontents import TableOfContents
 
 sys.path.insert(0, str(Path(__file__).parent))
-from layouts import LAYOUTS, STANDARD  # noqa: E402
+from layouts import LAYOUTS, STANDARD, pdf_text  # noqa: E402
 from recipe_to_pdf import load_recipe, register_fonts, validate_recipe  # noqa: E402
 from themes import CLASSIC, THEMES  # noqa: E402
 
 ROOT = Path(__file__).parent.parent
 
-_FRONT_MATTER_PAGES = 2  # cover + TOC
+
+class _FrontMatterEnd(Flowable):
+    """Zero-size marker placed after the TOC so the document knows, on every
+    build pass, how many front-matter pages precede the first content page —
+    the TOC may grow beyond one page in a large book."""
+
+    def wrap(self, availWidth, availHeight):
+        return 0, 0
+
+    def draw(self):
+        pass
 
 
 # ── Custom document template ────────────────────────────────────────────────
@@ -34,6 +44,7 @@ class BookDocTemplate(SimpleDocTemplate):
         self._theme       = theme
         self._layout      = layout
         self._sbs_templates = []  # populated by configure_book_doc for sidebyside layout
+        self._front_matter_pages = None  # set when _FrontMatterEnd is laid out
         super().__init__(*args, **kwargs)
 
     def addPageTemplates(self, pageTemplates):
@@ -45,8 +56,15 @@ class BookDocTemplate(SimpleDocTemplate):
                 if not any(pt.id == t.id for pt in self.pageTemplates):
                     super().addPageTemplates([t])
 
+    def handle_documentBegin(self):
+        # Reset per build pass: multiBuild runs several passes and the TOC
+        # (and therefore the front-matter page count) can change between them.
+        self._front_matter_pages = None
+        super().handle_documentBegin()
+
     def handle_pageEnd(self):
-        if self.page > _FRONT_MATTER_PAGES:
+        front = self._front_matter_pages
+        if front is not None and self.page > front:
             page_w = self._layout.page_size[0]
             c = self.canv
             c.saveState()
@@ -55,21 +73,31 @@ class BookDocTemplate(SimpleDocTemplate):
             c.drawCentredString(
                 page_w / 2,
                 0.6 * inch,
-                str(self.page - _FRONT_MATTER_PAGES),
+                str(self.page - front),
             )
             c.restoreState()
         super().handle_pageEnd()
 
     def afterFlowable(self, flowable):
+        if isinstance(flowable, _FrontMatterEnd):
+            # The marker is the first flowable on the first content page.
+            self._front_matter_pages = self.page - 1
+            return
         if not isinstance(flowable, Paragraph):
             return
         style_name = flowable.style.name
         text       = flowable.getPlainText()
-        page       = max(1, self.page - _FRONT_MATTER_PAGES)
+        front      = self._front_matter_pages or 0
+        page       = max(1, self.page - front)
         if style_name == "SectionDividerTitle":
-            self.notify("TOCEntry", (0, text.title(), page))
+            # The divider renders the title uppercased; use the original
+            # string for the TOC rather than round-tripping through case
+            # transforms (str.title() mangles apostrophes: GRANDMA'S →
+            # Grandma'S).
+            label = getattr(flowable, "toc_label", text)
+            self.notify("TOCEntry", (0, pdf_text(label), page))
         elif style_name == "RecipeTitle":
-            self.notify("TOCEntry", (1, text, page))
+            self.notify("TOCEntry", (1, pdf_text(text), page))
 
 
 # ── Validation ─────────────────────────────────────────────────────────────
@@ -82,12 +110,12 @@ def validate_book(book, book_path):
     """
     errors = []
 
-    schema    = json.loads((ROOT / "schema/book.json").read_text())
+    schema    = json.loads((ROOT / "schema/book.json").read_text(encoding="utf-8"))
     book_data = {k: v for k, v in book.items() if k != "$schema"}
 
     for err in jsonschema.Draft202012Validator(schema).iter_errors(book_data):
         path = " -> ".join(str(p) for p in err.absolute_path) or "(root)"
-        errors.append(f"Schema: {path}: {err.message}")
+        errors.append(f"{book_path}: {path}: {err.message}")
 
     for section in book_data.get("sections", []):
         for ref in section.get("recipes", []):
@@ -208,22 +236,23 @@ def cover_page(book, styles, theme, layout, cover_image_path=None):
     story  = []
 
     story.append(Spacer(1, (page_h * 0.28) - margin))
-    story.append(Paragraph(book["title"], styles["cover_title"]))
+    story.append(Paragraph(pdf_text(book["title"]), styles["cover_title"]))
     story.append(HRFlowable(width="100%", thickness=2,   color=theme.accent, spaceBefore=10, spaceAfter=3))
     story.append(HRFlowable(width="100%", thickness=0.5, color=theme.accent, spaceBefore=0,  spaceAfter=10))
 
     if "subtitle" in book:
-        story.append(Paragraph(book["subtitle"], styles["cover_subtitle"]))
+        story.append(Paragraph(pdf_text(book["subtitle"]), styles["cover_subtitle"]))
 
     if "description" in book and book["description"] != book.get("title"):
         story.append(Spacer(1, 0.15 * inch))
-        story.append(Paragraph(book["description"], styles["cover_description"]))
+        story.append(Paragraph(pdf_text(book["description"]), styles["cover_description"]))
 
     if cover_image_path:
         img   = Image(cover_image_path)
         max_w = page_w - 2 * margin
         max_h = page_h * 0.28
-        scale = min(max_w / img.drawWidth, max_h / img.drawHeight)
+        # Never upscale a small image past its natural size.
+        scale = min(1.0, max_w / img.drawWidth, max_h / img.drawHeight)
         img.drawWidth  *= scale
         img.drawHeight *= scale
         img.hAlign = "CENTER"
@@ -233,11 +262,8 @@ def cover_page(book, styles, theme, layout, cover_image_path=None):
     else:
         story.append(Spacer(1, page_h * 0.3))
 
-    byline_parts = []
     if "author" in book:
-        byline_parts.append(book["author"])
-    if byline_parts:
-        story.append(Paragraph("  ·  ".join(byline_parts), styles["cover_byline"]))
+        story.append(Paragraph(pdf_text(book["author"]), styles["cover_byline"]))
 
     edition_parts = []
     if "edition" in book:
@@ -246,7 +272,7 @@ def cover_page(book, styles, theme, layout, cover_image_path=None):
         edition_parts.append(book["date"][:4])
     if edition_parts:
         story.append(Spacer(1, 0.1 * inch))
-        story.append(Paragraph("  ·  ".join(edition_parts), styles["cover_edition"]))
+        story.append(Paragraph(pdf_text("  ·  ".join(edition_parts)), styles["cover_edition"]))
 
     story.append(PageBreak())
     return story
@@ -300,12 +326,14 @@ def section_divider(section, styles, theme, layout, next_template=None):
     story  = []
 
     story.append(Spacer(1, (page_h * 0.42) - margin))
-    story.append(Paragraph(section["title"].upper(), styles["section_divider_title"]))
+    title_para = Paragraph(pdf_text(section["title"].upper()), styles["section_divider_title"])
+    title_para.toc_label = section["title"]  # original case for the TOC entry
+    story.append(title_para)
     story.append(HRFlowable(width="60%", thickness=0.75, color=theme.accent, spaceBefore=12, spaceAfter=0))
 
     if "description" in section:
         story.append(Spacer(1, 0.2 * inch))
-        story.append(Paragraph(section["description"], styles["section_divider_desc"]))
+        story.append(Paragraph(pdf_text(section["description"]), styles["section_divider_desc"]))
 
     if next_template:
         story.append(NextPageTemplate(next_template))
@@ -320,13 +348,11 @@ def compile_book(book_path, output_dir, theme=CLASSIC, layout=STANDARD):
     register_fonts()
 
     book_path = Path(book_path)
-    book      = json.loads(book_path.read_text())
+    book      = json.loads(book_path.read_text(encoding="utf-8"))
 
     errors = validate_book(book, book_path)
     if errors:
-        for e in errors:
-            print(f"  ERROR  {e}", file=sys.stderr)
-        sys.exit(1)
+        raise ValueError("Invalid book:\n" + "\n".join(f"  {e}" for e in errors))
 
     output_dir  = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -354,8 +380,15 @@ def compile_book(book_path, output_dir, theme=CLASSIC, layout=STANDARD):
         keywords=", ".join(keywords),
     )
 
+    # Load each referenced recipe once; validation already confirmed the
+    # files exist and are well-formed.
+    recipes = {
+        ref["file"]: load_recipe(ROOT / "recipes" / f'{ref["file"]}.json')
+        for section in book["sections"] for ref in section["recipes"]
+    }
+
     recipe_data = [
-        (load_recipe(ROOT / "recipes" / f'{ref["file"]}.json')["title"], ref.get("note"))
+        (recipes[ref["file"]]["title"], ref.get("note"))
         for section in book["sections"] for ref in section["recipes"]
     ]
     layout.configure_book_doc(doc, theme, recipe_data=recipe_data)
@@ -372,10 +405,11 @@ def compile_book(book_path, output_dir, theme=CLASSIC, layout=STANDARD):
     story = [NextPageTemplate("Later")]  # ensure cover/TOC use single-column template
     story.extend(cover_page(book, styles, theme, layout, cover_image_path=tmp_image))
     story.extend(toc_page(styles, theme, layout))
+    story.append(_FrontMatterEnd())  # first content page starts here
 
-    all_recipes = [(s, r) for s in book["sections"] for r in s["recipes"]]
-    sections = book["sections"]
-    recipe_idx = 0
+    sections      = book["sections"]
+    total_recipes = sum(len(s["recipes"]) for s in sections)
+    recipe_idx    = 0
 
     for s_idx, section in enumerate(sections):
         if section.get("title"):
@@ -384,22 +418,20 @@ def compile_book(book_path, output_dir, theme=CLASSIC, layout=STANDARD):
 
         refs = section["recipes"]
         for r_idx, ref in enumerate(refs):
-            recipe_file = ROOT / "recipes" / f'{ref["file"]}.json'
-            recipe      = load_recipe(recipe_file)
+            recipe = recipes[ref["file"]]
 
             note_flowables = []
             if ref.get("note"):
                 note_flowables = [
-                    Paragraph(f'"{ref["note"]}"', styles["editorial_note"]),
+                    Paragraph(pdf_text(f'"{ref["note"]}"'), styles["editorial_note"]),
                     Spacer(1, 0.15 * inch),
                 ]
 
             recipe_story = layout.build_story(recipe, styles, text_width, theme)
             story.extend(layout.wrap_book_recipe(recipe_story, note_flowables))
 
-            is_last = (ref is all_recipes[-1][1] and section is all_recipes[-1][0])
             recipe_idx += 1
-            if not is_last:
+            if recipe_idx < total_recipes:
                 last_in_section = (r_idx == len(refs) - 1)
                 next_section_has_divider = (
                     last_in_section
@@ -447,13 +479,17 @@ def main():
     default_output = ROOT / "output"
     output_dir     = Path(args.output_dir) if args.output_dir else default_output
 
-    output_path = compile_book(
-        args.book,
-        output_dir,
-        theme=THEMES[args.theme],
-        layout=LAYOUTS[args.layout],
-    )
-    print(f"Written to {output_path}")
+    try:
+        output_path = compile_book(
+            args.book,
+            output_dir,
+            theme=THEMES[args.theme],
+            layout=LAYOUTS[args.layout],
+        )
+        print(f"Written to {output_path}")
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

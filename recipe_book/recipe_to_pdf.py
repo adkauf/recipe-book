@@ -33,6 +33,13 @@ FONT_FILES = {
 
 def register_fonts():
     """Register Garamond and Arial Narrow from system fonts."""
+    missing = [path for path in FONT_FILES.values() if not Path(path).exists()]
+    if missing:
+        raise FileNotFoundError(
+            "Font file(s) not found: "
+            + ", ".join(missing)
+            + " — see the Dependencies section of the README."
+        )
     for name, path in FONT_FILES.items():
         pdfmetrics.registerFont(TTFont(name, path))
     pdfmetrics.registerFontFamily(
