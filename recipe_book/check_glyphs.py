@@ -21,6 +21,7 @@ from pathlib import Path
 
 from reportlab.pdfbase.ttfonts import TTFontFile
 
+from menu_to_pdf import ELEGANT_FONT_FILES, ELEGANT_TITLE_FONT
 from recipe_to_pdf import FONT_FILES
 from themes import THEMES
 
@@ -57,39 +58,81 @@ def _text_chars(value):
             yield from _text_chars(v)
 
 
+# The chancery title font renders only menu titles; every other elegant
+# face renders general menu text.
+_ELEGANT_BODY_FONTS = sorted(set(ELEGANT_FONT_FILES) - {ELEGANT_TITLE_FONT})
+
+
+def _menu_extra_chars(menu_file):
+    """Yield characters a menu renders that come from referenced recipes."""
+    with open(menu_file, encoding="utf-8") as fh:
+        menu = json.load(fh)
+    for meal in menu.get("meals", []):
+        for course in meal.get("courses", []):
+            for dish in course.get("dishes", []):
+                if "file" not in dish:
+                    continue
+                recipe_file = ROOT / "recipes" / f'{dish["file"]}.json'
+                if recipe_file.exists():
+                    with open(recipe_file, encoding="utf-8") as rfh:
+                        yield from _text_chars(json.load(rfh).get("title", ""))
+
+
 def check_glyphs(globs=("recipes/*.json", "books/*.json", "menus/*.json")):
     """Return error strings for characters lacking a glyph in their font.
 
     Book and menu files are checked too: their titles, descriptions, section
     titles, dish names, and notes all render into the PDF in the same body
-    fonts.
+    fonts. Menu text (including the titles of recipes a menu references)
+    additionally renders in the elegant style's EB Garamond faces, so it is
+    checked against those as well.
     """
     coverage = {
-        name: TTFontFile(path).charToGlyph for name, path in FONT_FILES.items()
+        name: TTFontFile(path).charToGlyph
+        for name, path in {**FONT_FILES, **ELEGANT_FONT_FILES}.items()
     }
 
-    # char -> first file it was seen in
-    seen = {}
+    # char -> first file it was seen in; menus tracked separately because
+    # their text renders in the elegant fonts too, and menu titles render
+    # in the chancery title font.
+    seen       = {}
+    menu_seen  = {}
+    title_seen = {}
     for pattern in globs:
+        target = menu_seen if pattern.startswith("menus/") else seen
         for f in sorted(glob.glob(str(ROOT / pattern))):
             with open(f, encoding="utf-8") as fh:
                 data = json.load(fh)
             for ch in _text_chars(data):
-                seen.setdefault(ch, Path(f).name)
+                target.setdefault(ch, Path(f).name)
+            if target is menu_seen:
+                for ch in _menu_extra_chars(f):
+                    target.setdefault(ch, Path(f).name)
+                for ch in _text_chars(data.get("title", "")):
+                    title_seen.setdefault(ch, Path(f).name)
 
     errors = []
-    for ch, first_file in sorted(seen.items()):
-        if _is_fallback_char(ch):
-            fonts_needed = [_FALLBACK_FONT]
-        else:
-            fonts_needed = _BODY_FONTS
-        missing = [name for name in fonts_needed if ord(ch) not in coverage[name]]
-        if missing:
-            char_name = unicodedata.name(ch, "UNKNOWN")
-            errors.append(
-                f"U+{ord(ch):04X} {ch!r} ({char_name}, first seen in {first_file}) "
-                f"has no glyph in: {', '.join(missing)}"
-            )
+    checks = [
+        (seen, _BODY_FONTS),
+        (menu_seen, _BODY_FONTS + _ELEGANT_BODY_FONTS),
+        (title_seen, [ELEGANT_TITLE_FONT]),
+    ]
+    reported = set()
+    for chars, body_fonts in checks:
+        for ch, first_file in sorted(chars.items()):
+            if _is_fallback_char(ch):
+                fonts_needed = [_FALLBACK_FONT]
+            else:
+                fonts_needed = body_fonts
+            missing = [name for name in fonts_needed
+                       if ord(ch) not in coverage[name] and (ch, name) not in reported]
+            if missing:
+                reported.update((ch, name) for name in missing)
+                char_name = unicodedata.name(ch, "UNKNOWN")
+                errors.append(
+                    f"U+{ord(ch):04X} {ch!r} ({char_name}, first seen in {first_file}) "
+                    f"has no glyph in: {', '.join(missing)}"
+                )
     return errors
 
 
