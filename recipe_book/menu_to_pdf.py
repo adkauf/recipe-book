@@ -12,7 +12,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import HRFlowable, KeepTogether, Paragraph, SimpleDocTemplate, Spacer
 
 sys.path.insert(0, str(Path(__file__).parent))
 from layouts import LAYOUTS, STANDARD, pdf_text  # noqa: E402
@@ -329,18 +329,20 @@ def _dish_title(dish):
 
 
 def _course_flowables(course, styles):
-    """Return flowables for one course: optional header, then its dishes."""
+    """Return flowables for one course: optional header and description,
+    then its dishes."""
     story = []
     if course.get("title"):
         story.append(Spacer(1, 0.18 * inch))
         story.append(Paragraph(course["title"].upper(), styles["course_header"]))
         story.append(Spacer(1, 0.06 * inch))
+    if course.get("description"):
+        story.append(Paragraph(pdf_text(course["description"]), styles["dish_note"]))
+        story.append(Spacer(1, 0.06 * inch))
     for dish in course["dishes"]:
         story.append(Paragraph(pdf_text(_dish_title(dish)), styles["dish"]))
         if dish.get("note"):
             story.append(Paragraph(pdf_text(dish["note"]), styles["dish_note"]))
-    if course.get("description"):
-        story.append(Paragraph(pdf_text(course["description"]), styles["dish_note"]))
     return story
 
 
@@ -398,17 +400,18 @@ def build_menu_story(menu, styles, theme):
 
 def _elegant_course_flowables(course, styles):
     """Return flowables for one course in the elegant style."""
-    story = [Spacer(1, 0.22 * inch)]
+    story = [Spacer(1, 0.14 * inch)]
     if course.get("title"):
         story.append(Paragraph(f'— {pdf_text(course["title"].upper())} —',
                                styles["course_header"]))
+        story.append(Spacer(1, 0.06 * inch))
+    if course.get("description"):
+        story.append(Paragraph(pdf_text(course["description"]), styles["dish_note"]))
         story.append(Spacer(1, 0.06 * inch))
     for dish in course["dishes"]:
         story.append(Paragraph(pdf_text(_dish_title(dish)), styles["dish"]))
         if dish.get("note"):
             story.append(Paragraph(pdf_text(dish["note"]), styles["dish_note"]))
-    if course.get("description"):
-        story.append(Paragraph(pdf_text(course["description"]), styles["dish_note"]))
     return story
 
 
@@ -416,7 +419,7 @@ def build_elegant_story(menu, styles):
     """Assemble the flowables for the elegant menu-card presentation."""
     story = []
 
-    story.append(Spacer(1, 0.3 * inch))
+    story.append(Spacer(1, 0.18 * inch))
     story.append(Paragraph(pdf_text(menu["title"]), styles["title"]))
     story.append(Spacer(1, 0.05 * inch))
     story.append(Paragraph(_FLEURON_PAIR, styles["ornament"]))
@@ -446,11 +449,15 @@ def build_elegant_story(menu, styles):
             story.extend(_elegant_course_flowables(course, styles))
 
     if menu.get("notes"):
-        story.append(Spacer(1, 0.45 * inch))
-        story.append(Paragraph(_FLEURON, styles["ornament"]))
-        story.append(Spacer(1, 0.08 * inch))
-        for note in menu["notes"]:
-            story.append(Paragraph(pdf_text(note), styles["note_item"]))
+        footer = [
+            Spacer(1, 0.2 * inch),
+            Paragraph(_FLEURON, styles["ornament"]),
+            Spacer(1, 0.08 * inch),
+        ]
+        footer += [Paragraph(pdf_text(note), styles["note_item"]) for note in menu["notes"]]
+        # Keep the closing ornament and planning notes together so they never
+        # orphan onto a second page while whitespace remains on the first.
+        story.append(KeepTogether(footer))
 
     return story
 
@@ -481,7 +488,7 @@ def menu_to_pdf(menu_path, output_dir, theme=CLASSIC, layout=STANDARD, style="cl
     output_path = output_dir / f"{menu_path.stem}.pdf"
 
     if style == "elegant":
-        h_margin, v_margin = 1.1 * inch, 0.9 * inch
+        h_margin, v_margin = 1.1 * inch, 0.8 * inch
     else:
         h_margin = v_margin = theme.margin * inch
 
