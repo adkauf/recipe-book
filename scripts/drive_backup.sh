@@ -1,6 +1,7 @@
 #!/bin/sh
-# Back up or restore the private recipes/, books/, menus/, and images/
-# directories to/from Google Drive via the ChromeOS Drive mount.
+# Back up or restore the private data/ directories (recipes, books, menus,
+# images) to/from Google Drive via the ChromeOS Drive mount. The Drive copy
+# stays flat (Recipe Book/recipes, ...) so older backups restore unchanged.
 #
 # ChromeOS mounts Google Drive into the Linux container once it is shared:
 # Files app -> right-click "Google Drive" -> "Share with Linux".
@@ -44,24 +45,24 @@ case "${cmd}" in
             exit 1
         fi
         for d in ${DIRS}; do
-            if [ ! -d "${d}" ]; then
-                echo "Skipping ${d}/ (not present locally)"
+            if [ ! -d "data/${d}" ]; then
+                echo "Skipping data/${d}/ (not present locally)"
                 continue
             fi
-            echo "Backing up ${d}/ -> ${dest}/${d}"
+            echo "Backing up data/${d}/ -> ${dest}/${d}"
             rm -rf "${dest}/${d}" || exit 1
-            cp -r "${d}" "${dest}/${d}" || exit 1
+            cp -r "data/${d}" "${dest}/${d}" || exit 1
         done
         ;;
     restore)
         for d in ${DIRS}; do
             if [ ! -d "${dest}/${d}" ]; then
-                echo "Skipping ${d}/ (no backup found at ${dest}/${d})"
+                echo "Skipping data/${d}/ (no backup found at ${dest}/${d})"
                 continue
             fi
-            echo "Restoring ${dest}/${d} -> ${d}/"
-            mkdir -p "${d}"
-            cp -r "${dest}/${d}/." "${d}/" || exit 1
+            echo "Restoring ${dest}/${d} -> data/${d}/"
+            mkdir -p "data/${d}"
+            cp -r "${dest}/${d}/." "data/${d}/" || exit 1
         done
         ;;
     *)

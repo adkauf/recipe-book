@@ -87,7 +87,7 @@
                                         "properties": {
                                             "file": {
                                                 "type": "string",
-                                                "description": "Recipe filename stem, relative to recipes/ (e.g. 'sauerkraut'). Use for dishes with a recipe in the library."
+                                                "description": "Recipe filename stem, relative to data/recipes/ (e.g. 'sauerkraut'). Use for dishes with a recipe in the library."
                                             },
                                             "name": {
                                                 "type": "string",

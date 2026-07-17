@@ -72,13 +72,13 @@ def _menu_extra_chars(menu_file):
             for dish in course.get("dishes", []):
                 if "file" not in dish:
                     continue
-                recipe_file = ROOT / "recipes" / f'{dish["file"]}.json'
+                recipe_file = ROOT / "data" / "recipes" / f'{dish["file"]}.json'
                 if recipe_file.exists():
                     with open(recipe_file, encoding="utf-8") as rfh:
                         yield from _text_chars(json.load(rfh).get("title", ""))
 
 
-def check_glyphs(globs=("recipes/*.json", "books/*.json", "menus/*.json")):
+def check_glyphs(globs=("data/recipes/*.json", "data/books/*.json", "data/menus/*.json")):
     """Return error strings for characters lacking a glyph in their font.
 
     Book and menu files are checked too: their titles, descriptions, section
@@ -99,7 +99,7 @@ def check_glyphs(globs=("recipes/*.json", "books/*.json", "menus/*.json")):
     menu_seen  = {}
     title_seen = {}
     for pattern in globs:
-        target = menu_seen if pattern.startswith("menus/") else seen
+        target = menu_seen if pattern.startswith("data/menus/") else seen
         for f in sorted(glob.glob(str(ROOT / pattern))):
             with open(f, encoding="utf-8") as fh:
                 data = json.load(fh)

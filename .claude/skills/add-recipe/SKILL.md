@@ -5,7 +5,7 @@ description: Turn a recipe from any source (URL, pasted text, photo, or scan) in
 
 # Add a recipe
 
-Convert a source recipe into `recipes/<kebab-case-slug>.json`, validate it,
+Convert a source recipe into `data/recipes/<kebab-case-slug>.json`, validate it,
 and generate its PDF. The slug comes from the title (e.g. "Chicken Katsu
 Curry" → `chicken-katsu-curry`).
 
@@ -15,7 +15,7 @@ Curry" → `chicken-katsu-curry`).
 - Photo or scan → Read the image file.
 - Pasted text → use as-is.
 
-Check `ls recipes/` first: if the recipe already exists, update that file
+Check `ls data/recipes/` first: if the recipe already exists, update that file
 instead of creating a duplicate.
 
 ## 2. Write the JSON
@@ -23,7 +23,7 @@ instead of creating a duplicate.
 `schema/recipe.json` is the source of truth for structure. House
 conventions on top of it:
 
-- First key is `"$schema": "../schema/recipe.json"`; 4-space indent.
+- First key is `"$schema": "../../schema/recipe.json"`; 4-space indent.
 - Order of content: title, then servings and serving size (or `yield` for
   sauces/condiments — one of `servings`/`yield` is required), then
   ingredients, then instructions.
@@ -40,7 +40,7 @@ conventions on top of it:
   phases (e.g. sauce + main); then give each component a `title`.
 - **Rewrite instructions in your own words** as complete, readable prose —
   never copy the source text verbatim. Match the voice of existing recipes
-  (see `recipes/chimichurri.json` for a good example).
+  (see `data/recipes/chimichurri.json` for a good example).
 - `notes` = things a cook must read before starting (sourcing,
   substitutions, warnings). `endnotes` = storage, serving suggestions,
   background. In the side-by-side layout, notes share the left column with
@@ -51,9 +51,9 @@ conventions on top of it:
 ## 3. Validate and render
 
 ```sh
-python3 .claude/skills/add-recipe/validate.py recipes/<slug>.json
+python3 .claude/skills/add-recipe/validate.py data/recipes/<slug>.json
 python3 recipe_book/check_glyphs.py
-python3 recipe_book/recipe_to_pdf.py recipes/<slug>.json --theme print --layout sidebyside
+python3 recipe_book/recipe_to_pdf.py data/recipes/<slug>.json --theme print --layout sidebyside
 ```
 
 Fix and re-run until all three pass. Then use the **preview-pdf** skill to
@@ -62,7 +62,7 @@ headers, and missing-glyph boxes.
 
 ## 4. Wrap up
 
-`recipes/` is gitignored and private — there is nothing to commit. Remind
+`data/recipes/` is gitignored and private — there is nothing to commit. Remind
 the user that `./scripts/drive_backup.sh backup` is the only safety net for
 the new file, and offer `./scripts/publish.sh` to copy the PDF to Google
 Drive.

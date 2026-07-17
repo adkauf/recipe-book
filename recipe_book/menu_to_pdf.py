@@ -89,12 +89,12 @@ def validate_menu(menu, menu_path):
             for dish in course.get("dishes", []):
                 if "file" not in dish:
                     continue
-                recipe_file = ROOT / "recipes" / f'{dish["file"]}.json'
+                recipe_file = ROOT / "data" / "recipes" / f'{dish["file"]}.json'
                 if not recipe_file.exists():
-                    errors.append(f"Missing recipe file: recipes/{dish['file']}.json")
+                    errors.append(f"Missing recipe file: data/recipes/{dish['file']}.json")
                     continue
                 recipe = load_recipe(recipe_file)
-                errors.extend(validate_recipe(recipe, f'recipes/{dish["file"]}.json'))
+                errors.extend(validate_recipe(recipe, f'data/recipes/{dish["file"]}.json'))
 
     return errors
 
@@ -324,7 +324,7 @@ def _menu_meta_parts(menu):
 def _dish_title(dish):
     """Display title for a dish: the referenced recipe's title, or its name."""
     if "file" in dish:
-        return load_recipe(ROOT / "recipes" / f'{dish["file"]}.json')["title"]
+        return load_recipe(ROOT / "data" / "recipes" / f'{dish["file"]}.json')["title"]
     return dish["name"]
 
 

@@ -119,12 +119,12 @@ def validate_book(book, book_path):
 
     for section in book_data.get("sections", []):
         for ref in section.get("recipes", []):
-            recipe_file = ROOT / "recipes" / f'{ref["file"]}.json'
+            recipe_file = ROOT / "data" / "recipes" / f'{ref["file"]}.json'
             if not recipe_file.exists():
-                errors.append(f"Missing recipe file: recipes/{ref['file']}.json")
+                errors.append(f"Missing recipe file: data/recipes/{ref['file']}.json")
                 continue
             recipe = load_recipe(recipe_file)
-            errors.extend(validate_recipe(recipe, f'recipes/{ref["file"]}.json'))
+            errors.extend(validate_recipe(recipe, f'data/recipes/{ref["file"]}.json'))
 
     return errors
 
@@ -383,7 +383,7 @@ def compile_book(book_path, output_dir, theme=CLASSIC, layout=STANDARD):
     # Load each referenced recipe once; validation already confirmed the
     # files exist and are well-formed.
     recipes = {
-        ref["file"]: load_recipe(ROOT / "recipes" / f'{ref["file"]}.json')
+        ref["file"]: load_recipe(ROOT / "data" / "recipes" / f'{ref["file"]}.json')
         for section in book["sections"] for ref in section["recipes"]
     }
 

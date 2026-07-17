@@ -16,7 +16,7 @@ python3 recipe_book/check_glyphs.py || exit 1
 failures=0
 
 rc=0
-for recipe in recipes/*.json; do
+for recipe in data/recipes/*.json; do
     [ -e "${recipe}" ] || continue
     if python3 recipe_book/recipe_to_pdf.py "${recipe}" --theme "${theme}" --layout "${layout}"; then
         rc=$((rc + 1))
@@ -28,7 +28,7 @@ done
 echo "Wrote ${rc} recipes."
 
 bc=0
-for book in books/*.json; do
+for book in data/books/*.json; do
     [ -e "${book}" ] || continue
     if python3 recipe_book/book_to_pdf.py "${book}" --theme "${theme}" --layout "${layout}"; then
         bc=$((bc + 1))
@@ -40,7 +40,7 @@ done
 echo "Wrote ${bc} books."
 
 mc=0
-for menu in menus/*.json; do
+for menu in data/menus/*.json; do
     [ -e "${menu}" ] || continue
     if python3 recipe_book/menu_to_pdf.py "${menu}" --theme "${theme}" --layout "${layout}" --style elegant; then
         mc=$((mc + 1))

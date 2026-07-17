@@ -2,7 +2,4 @@ output
 __pycache__
 .vscode
 # Private content — not tracked; back up with ./scripts/drive_backup.sh
-books/
-images/
-menus/
-recipes/
+data/
