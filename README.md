@@ -22,10 +22,14 @@ recipe-book/
 ├── output/           # Generated PDFs
 ├── images/           # Cover images (private, not tracked)
 ├── fonts/            # Fonts shipped with the project (see Dependencies)
-└── scripts/
-    ├── gen_all.sh        # Batch script to generate everything
-    ├── publish.sh        # Copy generated PDFs to Google Drive (ChromeOS)
-    └── drive_backup.sh   # Back up / restore private content via Google Drive
+├── scripts/
+│   ├── gen_all.sh        # Batch script to generate everything
+│   ├── publish.sh        # Copy generated PDFs to Google Drive (ChromeOS)
+│   └── drive_backup.sh   # Back up / restore private content via Google Drive
+└── .claude/          # Claude Code workflow automation
+    ├── skills/add-recipe/    # Recipe intake pipeline + schema validator (validate.py)
+    ├── skills/preview-pdf/   # Render output PDFs to PNG for visual inspection
+    └── hooks/validate-content.sh  # Auto-validates recipe/book/menu JSON on edit
 ```
 
 The `recipes/`, `books/`, `menus/`, and `images/` directories contain
@@ -85,6 +89,37 @@ Uses the same ChromeOS Drive mount as `publish.sh` (requires the one-time
 `MyDrive/Recipe Book`; override it with the `RECIPE_BACKUP_DIR`
 environment variable. `backup` mirrors the local state (deletions included);
 `restore` only adds or updates local files, never deletes them.
+
+To run the backup automatically once a day, install a systemd user timer
+(cron is not available in a stock Crostini container):
+```sh
+mkdir -p ~/.config/systemd/user
+cat > ~/.config/systemd/user/recipe-backup.service <<'EOF'
+[Unit]
+Description=Back up recipe-book private content to Google Drive
+
+[Service]
+Type=oneshot
+ExecStart=%h/projects/recipe-book/scripts/drive_backup.sh backup
+EOF
+cat > ~/.config/systemd/user/recipe-backup.timer <<'EOF'
+[Unit]
+Description=Daily backup of recipe-book private content
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=10m
+
+[Install]
+WantedBy=timers.target
+EOF
+systemctl --user daemon-reload
+systemctl --user enable --now recipe-backup.timer
+```
+`Persistent=true` matters on ChromeOS: the container is rarely running at
+midnight, so a missed run fires the next time the container starts. Check
+the schedule with `systemctl --user list-timers recipe-backup.timer`.
 
 ### Options
 
@@ -207,6 +242,8 @@ Books generate a cover page, table of contents, section divider pages, and numbe
   titles, shipped in the repo (AGPL-3 with font exception); a TrueType
   conversion of the CFF original from `fonts-urw-base35`, which ReportLab
   cannot load directly
+- `poppler-utils` (Debian package, provides `pdftoppm`) — only needed for
+  the Claude Code preview-pdf skill, which renders PDFs to PNG for review
 
 Install Python dependencies with:
 ```sh
