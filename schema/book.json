@@ -61,7 +61,7 @@
                             "properties": {
                                 "file": {
                                     "type": "string",
-                                    "description": "Recipe filename stem, relative to recipes/ (e.g. 'sauerkraut')"
+                                    "description": "Recipe filename stem, relative to data/recipes/ (e.g. 'sauerkraut')"
                                 },
                                 "note": {
                                     "type": "string",

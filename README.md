@@ -8,9 +8,11 @@ A Python tool for generating professional recipe PDFs from JSON source data. Rec
 
 ```
 recipe-book/
-├── recipes/          # Individual recipe JSON files (private, not tracked)
-├── books/            # Recipe book definitions (private, not tracked)
-├── menus/            # Menu plans for meals or whole days (private, not tracked)
+├── data/             # Private content (not tracked)
+│   ├── recipes/      # Individual recipe JSON files
+│   ├── books/        # Recipe book definitions
+│   ├── menus/        # Menu plans for meals or whole days
+│   └── images/       # Cover images
 ├── schema/           # JSON schemas for recipes, books, and menus
 ├── recipe_book/      # Python source
 │   ├── recipe_to_pdf.py   # Generates a single recipe PDF
@@ -20,7 +22,6 @@ recipe-book/
 │   ├── themes.py          # Visual themes
 │   └── check_glyphs.py    # Verifies font glyph coverage for recipe/book text
 ├── output/           # Generated PDFs
-├── images/           # Cover images (private, not tracked)
 ├── fonts/            # Fonts shipped with the project (see Dependencies)
 ├── scripts/
 │   ├── gen_all.sh        # Batch script to generate everything
@@ -32,20 +33,19 @@ recipe-book/
     └── hooks/validate-content.sh  # Auto-validates recipe/book/menu JSON on edit
 ```
 
-The `recipes/`, `books/`, `menus/`, and `images/` directories contain
-private content and are excluded from version control via `.gitignore`. Use
-`drive_backup.sh` (below) to keep them backed up.
+The `data/` directory contains private content and is excluded from version
+control via `.gitignore`. Use `drive_backup.sh` (below) to keep it backed up.
 
 ## Usage
 
 **Single recipe:**
 ```sh
-python3 recipe_book/recipe_to_pdf.py recipes/loco-moco.json --theme print --layout sidebyside
+python3 recipe_book/recipe_to_pdf.py data/recipes/loco-moco.json --theme print --layout sidebyside
 ```
 
 **Full recipe book:**
 ```sh
-python3 recipe_book/book_to_pdf.py books/island-cooking.json --theme print --layout sidebyside
+python3 recipe_book/book_to_pdf.py data/books/island-cooking.json --theme print --layout sidebyside
 ```
 
 **All recipes and books at once:**
@@ -66,12 +66,12 @@ right-click "Google Drive" → "Share with Linux"). Override the destination
 with the `RECIPE_PUBLISH_DIR` environment variable.
 
 **Menu:** plan a single meal (e.g. Thanksgiving dinner) or a whole day of
-meals in `menus/*.json`, validated by `schema/menu.json`. Menus are organized
+meals in `data/menus/*.json`, validated by `schema/menu.json`. Menus are organized
 as meals → courses → dishes; a dish either references a library recipe by
 filename stem (`"file"`) or is a plain `"name"` for store-bought and
 no-recipe items.
 ```sh
-python3 recipe_book/menu_to_pdf.py menus/thanksgiving-dinner.json --theme print --style elegant
+python3 recipe_book/menu_to_pdf.py data/menus/thanksgiving-dinner.json --theme print --style elegant
 ```
 Renders a centered menu-card PDF; dishes referencing recipes print the
 recipe's title. `--style` picks the presentation: `classic` (default)
@@ -81,7 +81,7 @@ frame. `gen_all.sh` also generates all menus (using the elegant style).
 
 **Back up / restore private content (recipes, books, menus, cover images):**
 ```sh
-./scripts/drive_backup.sh backup    # mirror recipes/, books/, menus/, images/ to Google Drive
+./scripts/drive_backup.sh backup    # mirror the data/ directories to Google Drive
 ./scripts/drive_backup.sh restore   # copy them back from Google Drive
 ```
 Uses the same ChromeOS Drive mount as `publish.sh` (requires the one-time
@@ -137,11 +137,11 @@ the schedule with `systemctl --user list-timers recipe-backup.timer`.
 
 ## Recipe JSON Format
 
-Each recipe is a JSON file in `recipes/` validated against `schema/recipe.json`.
+Each recipe is a JSON file in `data/recipes/` validated against `schema/recipe.json`.
 
 ```jsonc
 {
-    "$schema": "../schema/recipe.json",
+    "$schema": "../../schema/recipe.json",
     "title": "Recipe Title",
     "category": "main",         // sauce, condiment, dessert, fermented vegetables, …
     "method": "braising",       // optional cooking method
@@ -199,11 +199,11 @@ python3 recipe_book/check_glyphs.py
 
 ## Book JSON Format
 
-Recipe books are defined in `books/` and validated against `schema/book.json`.
+Recipe books are defined in `data/books/` and validated against `schema/book.json`.
 
 ```jsonc
 {
-    "$schema": "../schema/book.json",
+    "$schema": "../../schema/book.json",
     "title": "Easy Cooking",
     "subtitle": "Easy Recipe Book",   // optional
     "description": "…",                           // optional
@@ -211,14 +211,14 @@ Recipe books are defined in `books/` and validated against `schema/book.json`.
     "author": "John Smith",
     "edition": "First Edition",
     "date": "2026-05-04",
-    "cover_image": "images/cover.jpg",           // optional, relative to project root
+    "cover_image": "data/images/cover.jpg",      // optional, relative to project root
     "sections": [
         {
             "title": "Sauces",
             "description": "Section description shown on the divider page.",
             "recipes": [
                 {
-                    "file": "chimichurri",       // stem of the file in recipes/
+                    "file": "chimichurri",       // stem of the file in data/recipes/
                     "note": "Editorial note printed alongside this recipe."
                 }
             ]

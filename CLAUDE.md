@@ -5,9 +5,9 @@ Generates recipe and recipe-book PDFs from JSON via ReportLab.
 ## Commands
 
 - `./scripts/gen_all.sh` — generate all recipes and books (runs glyph check first; non-zero exit on any failure)
-- `python3 recipe_book/recipe_to_pdf.py recipes/<name>.json --theme print --layout sidebyside` — single recipe
-- `python3 recipe_book/book_to_pdf.py books/<name>.json --theme print --layout sidebyside` — single book
-- `python3 recipe_book/menu_to_pdf.py menus/<name>.json --theme print --style elegant` — single menu card (`--style classic|elegant`; elegant needs the fonts-ebgaramond-extra package)
+- `python3 recipe_book/recipe_to_pdf.py data/recipes/<name>.json --theme print --layout sidebyside` — single recipe
+- `python3 recipe_book/book_to_pdf.py data/books/<name>.json --theme print --layout sidebyside` — single book
+- `python3 recipe_book/menu_to_pdf.py data/menus/<name>.json --theme print --style elegant` — single menu card (`--style classic|elegant`; elegant needs the fonts-ebgaramond-extra package)
 - `./scripts/publish.sh` — copy `output/*.pdf` to Google Drive
 - `./scripts/drive_backup.sh backup|restore` — back up / restore private content
 - `python3 .claude/skills/add-recipe/validate.py <file>` — validate a recipe/book/menu JSON against its schema
@@ -25,9 +25,9 @@ Generates recipe and recipe-book PDFs from JSON via ReportLab.
 
 ## Private content — IMPORTANT
 
-`recipes/`, `books/`, `menus/`, and `images/` are gitignored and exist ONLY locally.
-Never delete or `git clean` them; `./scripts/drive_backup.sh backup` is their
-only safety net.
+`data/` (containing `recipes/`, `books/`, `menus/`, and `images/`) is
+gitignored and exists ONLY locally. Never delete or `git clean` it;
+`./scripts/drive_backup.sh backup` is its only safety net.
 
 ## Environment (ChromeOS / Crostini)
 
