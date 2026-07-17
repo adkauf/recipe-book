@@ -15,6 +15,15 @@ already exist in `data/recipes/`.
 Check `ls data/books/` first: if the book already exists, update it
 instead of starting over.
 
+**Revising an existing book:** change only what was asked — keep the
+existing front matter, section prose, and editorial notes unless the user
+wants them changed (but flag placeholder text like "editorial note" if
+you see it, and offer to fix it). Verify stems for any reference you add;
+removing a recipe from a book never touches its file in `data/recipes/`.
+On a substantive revision (recipes added/removed, sections reshaped),
+update `date` and consider bumping `edition` (e.g. "Revised Edition") —
+ask if unsure. Then continue from step 4 to re-validate and re-render.
+
 The user gives either an explicit recipe list or a criterion. For a
 criterion, scan the library's `category` and `keywords` fields to build a
 candidate list:
