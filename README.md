@@ -29,6 +29,7 @@ recipe-book/
 │   └── drive_backup.sh   # Back up / restore private content via Google Drive
 └── .claude/          # Claude Code workflow automation
     ├── skills/add-recipe/    # Recipe intake pipeline + schema validator (validate.py)
+    ├── skills/compose-book/  # Curate library recipes into a recipe book
     ├── skills/preview-pdf/   # Render output PDFs to PNG for visual inspection
     └── hooks/validate-content.sh  # Auto-validates recipe/book/menu JSON on edit
 ```

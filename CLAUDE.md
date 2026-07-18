@@ -16,9 +16,10 @@ Generates recipe and recipe-book PDFs from JSON via ReportLab.
 
 - A PostToolUse hook (`.claude/hooks/validate-content.sh`) auto-validates
   recipe/book/menu JSON (schema + glyph check) after every Write/Edit.
-- Skills: `add-recipe` (recipe intake pipeline), `preview-pdf` (render PDFs
-  to PNG with `pdftoppm` for visual inspection — use it before declaring
-  layout/theme work done).
+- Skills: `add-recipe` (recipe intake pipeline), `compose-book` (curate
+  library recipes into a book), `preview-pdf` (render PDFs to PNG with
+  `pdftoppm` for visual inspection — use it before declaring layout/theme
+  work done).
 - A systemd user timer (`recipe-backup.timer`, machine-local) runs
   `drive_backup.sh backup` daily; check with
   `systemctl --user list-timers recipe-backup.timer`.
