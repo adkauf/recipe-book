@@ -18,8 +18,9 @@ fi
 mkdir -p "${dest}"
 
 pc=0
-for pdf in output/*.pdf
+for pdf in output/*/*.pdf
 do
+    [ -e "${pdf}" ] || continue
     cp "${pdf}" "${dest}/"
     pc=$((pc += 1))
 done

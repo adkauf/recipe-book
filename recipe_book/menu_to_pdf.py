@@ -527,7 +527,7 @@ def main():
     parser.add_argument(
         "-o", "--output-dir",
         default=None,
-        help="Output directory (default: output/ relative to project root)",
+        help="Output directory (default: output/menus/ relative to project root)",
     )
     parser.add_argument(
         "--theme",
@@ -550,7 +550,7 @@ def main():
     )
     args = parser.parse_args()
 
-    default_output = ROOT / "output"
+    default_output = ROOT / "output" / "menus"
     output_dir     = Path(args.output_dir) if args.output_dir else default_output
 
     try:
