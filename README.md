@@ -62,7 +62,7 @@ any generation fails.
 ./scripts/publish.sh
 ```
 Copies everything in `output/` to `MyDrive/Recipes` via the ChromeOS Drive
-mount. Requires sharing Google Drive with Linux once (Files app →
+mount, preserving the `recipes/`, `books/`, `menus/` structure. Requires sharing Google Drive with Linux once (Files app →
 right-click "Google Drive" → "Share with Linux"). Override the destination
 with the `RECIPE_PUBLISH_DIR` environment variable.
 
