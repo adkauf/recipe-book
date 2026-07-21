@@ -166,6 +166,10 @@ Each recipe is a JSON file in `data/recipes/` validated against `schema/recipe.j
                     "amount": { "quantity": "1½", "unit": "pounds" },
                     "preparation": "finely chopped",   // optional
                     "note": "80/20 blend preferred"    // optional
+                },
+                {
+                    "name": "salt and black pepper",
+                    "amount": { "descriptor": "to taste" }   // no fixed quantity — required either way
                 }
             ],
             "instructions": [
@@ -187,6 +191,10 @@ Each recipe is a JSON file in `data/recipes/` validated against `schema/recipe.j
 - Ingredient names are not capitalized, except for proper nouns.
 - Measurement units are spelled out (e.g., `tablespoon`, not `tbsp`).
 - Quantities use Unicode fraction characters (e.g., `½`, `¾`, `⅓`).
+- Every ingredient requires `amount`. For a measured quantity, use `{ "quantity": ..., "unit": ... }`
+  (unit optional, e.g. for counts like `"quantity": "2"`). For an ingredient with no fixed amount —
+  a seasoning added to taste, a garnish, something for serving — use `{ "descriptor": "to taste" }`
+  instead (also `"for serving"`, `"as needed"`, `"for garnish"`, or any other short freeform phrase).
 
 **Fraction rendering:** not every font covers every Unicode fraction. Garamond
 (the body font in all themes) has the Latin-1 fractions `¼ ½ ¾` but lacks most

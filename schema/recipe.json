@@ -117,17 +117,33 @@
                         "minItems": 1,
                         "items": {
                             "type": "object",
-                            "required": ["name"],
+                            "required": ["name", "amount"],
                             "properties": {
                                 "name": { "type": "string", "minLength": 1 },
                                 "amount": {
                                     "type": "object",
-                                    "required": ["quantity"],
-                                    "properties": {
-                                        "quantity": { "type": "string", "minLength": 1 },
-                                        "unit": { "type": "string", "minLength": 1 }
-                                    },
-                                    "additionalProperties": false
+                                    "description": "A measured quantity, or a freeform descriptor for ingredients with no fixed amount (to taste, for serving, as needed).",
+                                    "oneOf": [
+                                        {
+                                            "required": ["quantity"],
+                                            "properties": {
+                                                "quantity": { "type": "string", "minLength": 1 },
+                                                "unit": { "type": "string", "minLength": 1 }
+                                            },
+                                            "additionalProperties": false
+                                        },
+                                        {
+                                            "required": ["descriptor"],
+                                            "properties": {
+                                                "descriptor": {
+                                                    "type": "string",
+                                                    "minLength": 1,
+                                                    "examples": ["to taste", "for serving", "as needed", "for garnish"]
+                                                }
+                                            },
+                                            "additionalProperties": false
+                                        }
+                                    ]
                                 },
                                 "preparation": {
                                     "type": "string",

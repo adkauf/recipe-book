@@ -62,9 +62,13 @@ def ingredient_table(ingredients, styles, text_width, qty_col=1.4 * inch):
 
     rows = []
     for ing in ingredients:
-        qty = ing["amount"]["quantity"] if "amount" in ing else ""
-        if "amount" in ing and "unit" in ing["amount"]:
-            qty += f' {ing["amount"]["unit"]}'
+        amt = ing.get("amount", {})
+        if "descriptor" in amt:
+            qty = amt["descriptor"]
+        else:
+            qty = amt.get("quantity", "")
+            if "unit" in amt:
+                qty += f' {amt["unit"]}'
         name = ing["name"]
         if "preparation" in ing:
             name += f", {ing['preparation']}"
@@ -531,14 +535,18 @@ class SideBySideLayout(Layout):
         items = []
         for ing in ingredients:
             parts = []
-            if "amount" in ing:
-                qty = ing["amount"]["quantity"]
-                if "unit" in ing["amount"]:
-                    qty += f' {ing["amount"]["unit"]}'
+            amt = ing.get("amount", {})
+            descriptor = amt.get("descriptor")
+            if "quantity" in amt:
+                qty = amt["quantity"]
+                if "unit" in amt:
+                    qty += f' {amt["unit"]}'
                 parts.append(qty)
             name = ing["name"]
             if "preparation" in ing:
                 name += f', {ing["preparation"]}'
+            if descriptor:
+                name += f', {descriptor}'
             parts.append(name)
             items.append(Paragraph(pdf_text(" ".join(parts)), styles["ingredient_line"]))
             if "note" in ing:
