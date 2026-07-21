@@ -44,6 +44,9 @@ gitignored and exists ONLY locally. Never delete or `git clean` it;
   truth for structure.
 - All recipe text must pass `recipe_book/check_glyphs.py`; the fonts lack
   some Unicode glyphs, so check after adding text with diacritics.
+- Every ingredient requires `amount`: a measured `{quantity, unit?}`, or
+  `{descriptor}` (freeform, e.g. "to taste", "for serving", "as needed")
+  for ingredients with no fixed amount.
 - Recipe content: title, then servings and serving size (if appropriate),
   then ingredients (listed in order of use), then preparation method.
 

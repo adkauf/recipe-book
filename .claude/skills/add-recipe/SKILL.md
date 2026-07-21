@@ -36,6 +36,15 @@ conventions on top of it:
 - List ingredients **in order of use**. Split amount into
   `{"quantity": "...", "unit": "..."}`; put "finely chopped" etc. in
   `preparation`, not in the name.
+- **Every ingredient requires `amount`** — the schema enforces this. For
+  something with no fixed quantity (a seasoning added to taste, a
+  garnish, an item for serving), use `{"descriptor": "..."}` instead of
+  `quantity`/`unit` — e.g. `"to taste"`, `"for serving"`, `"as needed"`,
+  `"for garnish"`. Reach for a real quantity first if the source gives
+  one or a reasonable one is inferable; use `descriptor` only when the
+  amount is genuinely open-ended. Don't reach for `"to taste"` on
+  ingredients where amount actually matters (e.g. salt in a fermentation
+  brine) — give those a real measured quantity instead.
 - Use a single untitled component unless the recipe has genuinely distinct
   phases (e.g. sauce + main); then give each component a `title`.
 - **Rewrite instructions in your own words** as complete, readable prose —
