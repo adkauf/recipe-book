@@ -21,7 +21,7 @@ recipe-book/
 │   ├── layouts.py         # Page layout strategies
 │   ├── themes.py          # Visual themes
 │   └── check_glyphs.py    # Verifies font glyph coverage for recipe/book text
-├── output/           # Generated PDFs
+├── output/           # Generated PDFs, mirroring data/ (recipes/, books/, menus/)
 ├── fonts/            # Fonts shipped with the project (see Dependencies)
 ├── scripts/
 │   ├── gen_all.sh        # Batch script to generate everything
@@ -62,7 +62,7 @@ any generation fails.
 ./scripts/publish.sh
 ```
 Copies everything in `output/` to `MyDrive/Recipes` via the ChromeOS Drive
-mount. Requires sharing Google Drive with Linux once (Files app →
+mount, preserving the `recipes/`, `books/`, `menus/` structure. Requires sharing Google Drive with Linux once (Files app →
 right-click "Google Drive" → "Share with Linux"). Override the destination
 with the `RECIPE_PUBLISH_DIR` environment variable.
 
@@ -134,7 +134,8 @@ the schedule with `systemctl --user list-timers recipe-backup.timer`.
 - `standard` — single-column layout; ingredients and instructions stacked
 - `sidebyside` — two-column layout; ingredients on the left, instructions on the right; overflow pages use a single full-width column
 
-`-o / --output-dir` — output directory (default: `output/`)
+`-o / --output-dir` — output directory (default mirrors `data/`:
+`output/recipes/`, `output/books/`, or `output/menus/`)
 
 ## Recipe JSON Format
 

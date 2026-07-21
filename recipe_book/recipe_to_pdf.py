@@ -125,7 +125,7 @@ def main():
     parser.add_argument(
         "-o", "--output-dir",
         default=None,
-        help="Output directory (default: output/ relative to project root)",
+        help="Output directory (default: output/recipes/ relative to project root)",
     )
     parser.add_argument(
         "--theme",
@@ -141,7 +141,7 @@ def main():
     )
     args = parser.parse_args()
 
-    default_output = Path(__file__).parent.parent / "output"
+    default_output = Path(__file__).parent.parent / "output" / "recipes"
     output_dir     = Path(args.output_dir) if args.output_dir else default_output
 
     try:

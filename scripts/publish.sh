@@ -18,9 +18,12 @@ fi
 mkdir -p "${dest}"
 
 pc=0
-for pdf in output/*.pdf
+for pdf in output/*/*.pdf
 do
-    cp "${pdf}" "${dest}/"
+    [ -e "${pdf}" ] || continue
+    sub=$(basename "$(dirname "${pdf}")")
+    mkdir -p "${dest}/${sub}"
+    cp "${pdf}" "${dest}/${sub}/"
     pc=$((pc += 1))
 done
-echo "Published ${pc} PDFs to ${dest}"
+echo "Published ${pc} PDFs to ${dest} (mirroring output/)"

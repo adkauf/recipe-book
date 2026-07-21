@@ -5,13 +5,14 @@ description: Render pages of a generated PDF to PNG images for visual inspection
 
 # Preview a PDF
 
-PDFs in `output/` can't be judged from the terminal. Render pages to PNG
+Generated PDFs (in `output/recipes/`, `output/books/`, `output/menus/` —
+mirroring `data/`) can't be judged from the terminal. Render pages to PNG
 with `pdftoppm` (poppler-utils), then Read the images to inspect them.
 
 ## Render
 
 ```sh
-pdftoppm -png -r 100 output/<name>.pdf "$SCRATCHPAD/<name>"
+pdftoppm -png -r 100 output/<type>/<name>.pdf "$SCRATCHPAD/<name>"
 ```
 
 Use the session scratchpad directory for the images — they are throwaway.
