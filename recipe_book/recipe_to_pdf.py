@@ -100,6 +100,7 @@ def recipe_to_pdf(recipe_path, output_dir, theme=CLASSIC, layout=STANDARD):
     keywords = recipe.get("keywords", [])
     if recipe.get("category"):
         keywords = [recipe["category"]] + keywords
+    keywords = list(dict.fromkeys(keywords))
 
     doc = layout.make_doc(
         str(output_path),
