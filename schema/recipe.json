@@ -161,9 +161,9 @@
                         "description": "Ordered list of steps; step numbers are derived from array position.",
                         "items": {
                             "type": "object",
-                            "required": ["task"],
+                            "required": ["step"],
                             "properties": {
-                                "task": { "type": "string" }
+                                "step": { "type": "string" }
                             },
                             "additionalProperties": false
                         }

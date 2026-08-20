@@ -132,7 +132,7 @@ def instruction_table(instructions, styles, text_width):
     rows = [
         [
             Paragraph(str(i),             styles["step_num"]),
-            Paragraph(pdf_text(step["task"]),  styles["step_body"]),
+            Paragraph(pdf_text(step["step"]),  styles["step_body"]),
         ]
         for i, step in enumerate(instructions, start=1)
     ]
@@ -178,7 +178,7 @@ def instruction_lines(instructions, styles):
     """
     return [
         Paragraph(
-            pdf_text(step["task"]),
+            pdf_text(step["step"]),
             styles["step_line"],
             bulletText=f'{i}.',
         )
