@@ -173,7 +173,7 @@ Each recipe is a JSON file in `data/recipes/` validated against `schema/recipe.j
                 }
             ],
             "instructions": [
-                { "task": "Season the beef generously with salt and pepper." }
+                { "step": "Season the beef generously with salt and pepper." }
             ]
         }
     ],
