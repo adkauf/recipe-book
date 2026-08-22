@@ -9,7 +9,7 @@ Generates recipe and recipe-book PDFs from JSON via ReportLab.
 - `python3 recipe_book/book_to_pdf.py data/books/<name>.json --theme print --layout sidebyside` — single book
 - `python3 recipe_book/menu_to_pdf.py data/menus/<name>.json --theme print --style elegant` — single menu card (`--style classic|elegant`; elegant needs the fonts-ebgaramond-extra package)
 - `./scripts/publish.sh` — copy `output/*/*.pdf` to Google Drive, mirroring the recipes/books/menus structure
-- `./scripts/drive_backup.sh backup|restore` — back up / restore private content
+- `./scripts/drive_backup.sh backup|restore|prune` — back up / restore private content; `prune` removes stale Drive-only files after confirmation (`backup`/`restore` never delete)
 - `python3 .claude/skills/add-recipe/validate.py <file>` — validate a recipe/book/menu JSON against its schema
 
 ## Automation
