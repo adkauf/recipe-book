@@ -7,13 +7,14 @@
 # Files app -> right-click "Google Drive" -> "Share with Linux".
 #
 # Usage:
-#   ./scripts/drive_backup.sh backup    # mirror local -> Drive
-#   ./scripts/drive_backup.sh restore   # copy Drive -> local
+#   ./scripts/drive_backup.sh backup    # copy local -> Drive (adds/updates only)
+#   ./scripts/drive_backup.sh restore   # copy Drive -> local (adds/updates only)
+#   ./scripts/drive_backup.sh prune     # list and, on confirmation, delete
+#                                        # Drive files no longer present locally
 #
-# backup replaces the Drive copy of each directory wholesale, so files
-# deleted locally are also removed from the Drive copy (Drive keeps them
-# in its trash for 30 days). restore never deletes local files — it only
-# adds or updates them.
+# backup and restore never delete files on their target side — they only add
+# or update. A file removed locally (accidentally or on purpose) is left
+# alone in the Drive backup until you explicitly run prune and confirm.
 set -u
 cd "$(dirname "$0")/.."
 
@@ -21,7 +22,7 @@ dest="${RECIPE_BACKUP_DIR:-/mnt/chromeos/GoogleDrive/MyDrive/Recipe Book}"
 DIRS="recipes books images menus"
 
 usage() {
-    echo "usage: $0 backup|restore" >&2
+    echo "usage: $0 backup|restore|prune" >&2
     echo "  backup location: ${dest} (override with RECIPE_BACKUP_DIR)" >&2
     exit 2
 }
@@ -50,8 +51,8 @@ case "${cmd}" in
                 continue
             fi
             echo "Backing up data/${d}/ -> ${dest}/${d}"
-            rm -rf "${dest}/${d}" || exit 1
-            cp -r "data/${d}" "${dest}/${d}" || exit 1
+            mkdir -p "${dest}/${d}" || exit 1
+            cp -r "data/${d}/." "${dest}/${d}/" || exit 1
         done
         ;;
     restore)
@@ -63,6 +64,48 @@ case "${cmd}" in
             echo "Restoring ${dest}/${d} -> data/${d}/"
             mkdir -p "data/${d}"
             cp -r "${dest}/${d}/." "data/${d}/" || exit 1
+        done
+        ;;
+    prune)
+        tmp_local=$(mktemp)
+        tmp_backup=$(mktemp)
+        trap 'rm -f "${tmp_local}" "${tmp_backup}"' EXIT
+
+        found=0
+        for d in ${DIRS}; do
+            [ -d "data/${d}" ] && [ -d "${dest}/${d}" ] || continue
+            (cd "data/${d}" && find . -type f | sort) >"${tmp_local}"
+            (cd "${dest}/${d}" && find . -type f | sort) >"${tmp_backup}"
+            stale=$(comm -13 "${tmp_local}" "${tmp_backup}")
+            if [ -n "${stale}" ]; then
+                found=1
+                echo "Stale in ${dest}/${d} (not present in data/${d}):"
+                echo "${stale}" | sed "s|^\./|  ${dest}/${d}/|"
+            fi
+        done
+
+        if [ "${found}" -eq 0 ]; then
+            echo "No stale backup files found."
+            exit 0
+        fi
+
+        printf 'Delete the files listed above from the Drive backup? [y/N] '
+        read -r ans <"$(tty)" || ans=""
+        case "${ans}" in
+            y|Y|yes|YES) ;;
+            *)
+                echo "Aborted; no files deleted."
+                exit 0
+                ;;
+        esac
+
+        for d in ${DIRS}; do
+            [ -d "data/${d}" ] && [ -d "${dest}/${d}" ] || continue
+            (cd "data/${d}" && find . -type f | sort) >"${tmp_local}"
+            (cd "${dest}/${d}" && find . -type f | sort) >"${tmp_backup}"
+            comm -13 "${tmp_local}" "${tmp_backup}" | while IFS= read -r f; do
+                rm -f "${dest}/${d}/${f#./}"
+            done
         done
         ;;
     *)
