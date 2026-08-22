@@ -79,10 +79,18 @@ copies of both all need to follow:
 2. Rename the file to match the new slug:
    `git mv data/recipes/<old-slug>.json data/recipes/<new-slug>.json`
    (`data/` is gitignored, but `git mv` still works fine as a plain rename).
-3. Re-run validate/glyph-check/render (step 3 above) against the new
-   filename, then delete the stale PDF at `output/recipes/<old-slug>.pdf`.
-4. Preview the new PDF with the **preview-pdf** skill.
-5. After backing up and publishing (step 5 below), also run
+3. Check for dangling references — books and menus point at recipes by
+   filename stem (a book's `recipes[].file`, a menu dish's `file`), not by
+   title, so a rename orphans any reference to the old slug:
+   `grep -rl '"<old-slug>"' data/books/ data/menus/`. Update the `file`
+   value in every match to `<new-slug>`, then re-validate and re-render
+   that book/menu (`book_to_pdf.py` / `menu_to_pdf.py`).
+4. Re-run validate/glyph-check/render (step 3 above) against the new
+   recipe filename, then delete the stale PDF at
+   `output/recipes/<old-slug>.pdf`.
+5. Preview the new recipe PDF (and any book/menu PDFs touched in step 3)
+   with the **preview-pdf** skill.
+6. After backing up and publishing (step 5 below), also run
    `./scripts/drive_backup.sh prune` and `./scripts/publish.sh prune` to
    remove the old-named copies from Drive — both list what's stale and ask
    for confirmation before deleting anything.
