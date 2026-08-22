@@ -82,14 +82,17 @@ frame. `gen_all.sh` also generates all menus (using the elegant style).
 
 **Back up / restore private content (recipes, books, menus, cover images):**
 ```sh
-./scripts/drive_backup.sh backup    # mirror the data/ directories to Google Drive
+./scripts/drive_backup.sh backup    # copy the data/ directories to Google Drive
 ./scripts/drive_backup.sh restore   # copy them back from Google Drive
+./scripts/drive_backup.sh prune     # list, then on confirmation delete, stale Drive files
 ```
 Uses the same ChromeOS Drive mount as `publish.sh` (requires the one-time
 "Share with Linux" step described above). The backup location defaults to
 `MyDrive/Recipe Book`; override it with the `RECIPE_BACKUP_DIR`
-environment variable. `backup` mirrors the local state (deletions included);
-`restore` only adds or updates local files, never deletes them.
+environment variable. `backup` and `restore` only add or update files —
+neither ever deletes. If a file is removed locally, it's left alone in the
+Drive backup until you run `prune`, which lists what's Drive-only and
+deletes only after you confirm.
 
 To run the backup automatically once a day, install a systemd user timer
 (cron is not available in a stock Crostini container):
