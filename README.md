@@ -59,12 +59,15 @@ any generation fails.
 
 **Publish generated PDFs to Google Drive (ChromeOS):**
 ```sh
-./scripts/publish.sh
+./scripts/publish.sh          # copy output/*/*.pdf to Drive (adds/updates only)
+./scripts/publish.sh prune    # list, then on confirmation delete, stale Drive PDFs
 ```
 Copies everything in `output/` to `MyDrive/Recipes` via the ChromeOS Drive
 mount, preserving the `recipes/`, `books/`, `menus/` structure. Requires sharing Google Drive with Linux once (Files app →
 right-click "Google Drive" → "Share with Linux"). Override the destination
-with the `RECIPE_PUBLISH_DIR` environment variable.
+with the `RECIPE_PUBLISH_DIR` environment variable. `publish` never deletes —
+if a PDF is renamed or removed locally (e.g. after renaming a recipe), the
+old file is left alone in Drive until you run `prune` and confirm.
 
 **Menu:** plan a single meal (e.g. Thanksgiving dinner) or a whole day of
 meals in `data/menus/*.json`, validated by `schema/menu.json`. Menus are organized

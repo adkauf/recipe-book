@@ -69,7 +69,33 @@ Fix and re-run until all three pass. Then use the **preview-pdf** skill to
 render the PDF and visually inspect it: look for column overflow, orphaned
 headers, and missing-glyph boxes.
 
-## 4. Wrap up
+## 4. Renaming an existing recipe
+
+Changing a recipe's `title` after the fact needs a few extra steps beyond
+editing the field, because the filename, the rendered PDF, and the Drive
+copies of both all need to follow:
+
+1. Update the `title` field in the JSON.
+2. Rename the file to match the new slug:
+   `git mv data/recipes/<old-slug>.json data/recipes/<new-slug>.json`
+   (`data/` is gitignored, but `git mv` still works fine as a plain rename).
+3. Check for dangling references — books and menus point at recipes by
+   filename stem (a book's `recipes[].file`, a menu dish's `file`), not by
+   title, so a rename orphans any reference to the old slug:
+   `grep -rl '"<old-slug>"' data/books/ data/menus/`. Update the `file`
+   value in every match to `<new-slug>`, then re-validate and re-render
+   that book/menu (`book_to_pdf.py` / `menu_to_pdf.py`).
+4. Re-run validate/glyph-check/render (step 3 above) against the new
+   recipe filename, then delete the stale PDF at
+   `output/recipes/<old-slug>.pdf`.
+5. Preview the new recipe PDF (and any book/menu PDFs touched in step 3)
+   with the **preview-pdf** skill.
+6. After backing up and publishing (step 5 below), also run
+   `./scripts/drive_backup.sh prune` and `./scripts/publish.sh prune` to
+   remove the old-named copies from Drive — both list what's stale and ask
+   for confirmation before deleting anything.
+
+## 5. Wrap up
 
 `data/recipes/` is gitignored and private — there is nothing to commit. Remind
 the user that `./scripts/drive_backup.sh backup` is the only safety net for
