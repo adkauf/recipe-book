@@ -49,6 +49,11 @@ gitignored and exists ONLY locally. Never delete or `git clean` it;
   for ingredients with no fixed amount.
 - Recipe content: title, then servings and serving size (if appropriate),
   then ingredients (listed in order of use), then preparation method.
+- `category` and `method` are closed enums in `schema/recipe.json` — use an
+  existing value rather than adding one, so the library stays sortable.
+  `method` is an array (a recipe can sear *and* braise).
+- Recipe attribution belongs in the structured `source` object, not in
+  prose; the renderer generates the credit line from it.
 
 ## Conventions
 

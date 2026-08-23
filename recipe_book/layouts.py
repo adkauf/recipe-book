@@ -191,8 +191,32 @@ def notes_list(notes, styles):
     return [Paragraph(pdf_text(f"· {note}"), styles["note_item"]) for note in notes]
 
 
+def source_line(source):
+    """Format a structured source into a single attribution sentence."""
+    credit = ", ".join(
+        part
+        for part in (
+            source.get("author"),
+            source.get("name") or source.get("url"),
+            f"p. {source['page']}" if source.get("page") else None,
+            source.get("date"),
+        )
+        if part
+    )
+    lead = "Adapted from" if source.get("adapted") else "Recipe from"
+    return f"{lead} {credit}."
+
+
+def recipe_endnotes(recipe):
+    """Endnotes for a recipe, with the attribution line appended when sourced."""
+    endnotes = list(recipe.get("endnotes", []))
+    if recipe.get("source"):
+        endnotes.append(source_line(recipe["source"]))
+    return endnotes
+
+
 def recipe_meta_parts(recipe):
-    """Build the meta-line strings for a recipe: servings, yield, method, time."""
+    """Build the meta-line strings: servings, yield, cuisine, method, time."""
     parts = []
     if "servings" in recipe:
         parts.append(f"Serves {recipe['servings']}")
@@ -200,8 +224,10 @@ def recipe_meta_parts(recipe):
         parts.append(recipe["serving_size"])
     if "yield" in recipe:
         parts.append(f"Yield: {recipe['yield']}")
+    if "cuisine" in recipe:
+        parts.append(recipe["cuisine"])
     if "method" in recipe:
-        parts.append(recipe["method"].title())
+        parts.append(", ".join(recipe["method"]).title())
 
     time = recipe.get("time")
     if time:
@@ -440,9 +466,10 @@ class StandardLayout(Layout):
             story.extend(section_heading("Notes", styles, theme))
             story.extend(notes_list(recipe["notes"], styles))
 
-        if recipe.get("endnotes"):
+        endnotes = recipe_endnotes(recipe)
+        if endnotes:
             story.extend(section_heading("Endnotes", styles, theme))
-            story.extend(notes_list(recipe["endnotes"], styles))
+            story.extend(notes_list(endnotes, styles))
 
         return story
 
@@ -787,9 +814,10 @@ class SideBySideLayout(Layout):
             story.extend(section_heading("Variations", styles, theme))
             story.extend(variations_lines(recipe["variations"], styles, theme))
 
-        if recipe.get("endnotes"):
+        endnotes = recipe_endnotes(recipe)
+        if endnotes:
             story.extend(section_heading("Endnotes", styles, theme))
-            story.extend(notes_list(recipe["endnotes"], styles))
+            story.extend(notes_list(endnotes, styles))
 
         return story
 

@@ -17,11 +17,100 @@
         },
         "category": {
             "type": "string",
-            "examples": ["sauce", "fermented vegetables", "curd", "condiment", "dessert"]
+            "description": "What kind of dish this is — the primary axis the library is organized by. Closed set: pick the closest match rather than inventing a new value, so the collection stays sortable.",
+            "enum": [
+                "appetizer",
+                "beverage",
+                "bread",
+                "breakfast",
+                "condiment",
+                "dessert",
+                "main",
+                "pickles",
+                "salad",
+                "sauce",
+                "side",
+                "snack",
+                "soup",
+                "technique"
+            ]
+        },
+        "cuisine": {
+            "type": "string",
+            "description": "Regional or cultural tradition the recipe belongs to. Freeform (mirrors schema.org recipeCuisine) since the set is open-ended, but keep it a bare adjective so values group cleanly.",
+            "examples": ["Hawaiian", "Italian", "Korean", "Mexican", "Moroccan"]
         },
         "method": {
-            "type": "string",
-            "examples": ["fermentation", "roasting", "braising"]
+            "type": "array",
+            "description": "Cooking methods used, in order of prominence. An array because many recipes genuinely use more than one (e.g. searing then braising).",
+            "minItems": 1,
+            "items": {
+                "type": "string",
+                "enum": [
+                    "baking",
+                    "boiling",
+                    "braising",
+                    "broiling",
+                    "churning",
+                    "curing",
+                    "deep-frying",
+                    "fermenting",
+                    "frying",
+                    "grilling",
+                    "infusing",
+                    "marinating",
+                    "pan-frying",
+                    "poaching",
+                    "roasting",
+                    "sauteing",
+                    "searing",
+                    "simmering",
+                    "smoking",
+                    "steaming",
+                    "stewing",
+                    "stir-frying"
+                ]
+            }
+        },
+        "source": {
+            "type": "object",
+            "description": "Where the recipe came from. Structured rather than prose so attribution can be queried and the rendered credit line stays consistently phrased.",
+            "anyOf": [
+                { "required": ["name"] },
+                { "required": ["author"] }
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Publication, site, or person the recipe came from.",
+                    "examples": ["Example Cookbook", "example.com", "Jane Doe"]
+                },
+                "author": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Individual credited with the recipe, when distinct from the publication.",
+                    "examples": ["John Smith", "Jane Doe"]
+                },
+                "url": { "type": "string", "minLength": 1 },
+                "page": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Page reference for print sources. A string so ranges like '228-229' work.",
+                    "examples": ["228", "228-229"]
+                },
+                "date": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Publication year or date, freeform.",
+                    "examples": ["2001", "December 2019"]
+                },
+                "adapted": {
+                    "type": "boolean",
+                    "description": "True when this version departs from the original; renders as 'Adapted from' rather than 'Recipe from'."
+                }
+            },
+            "additionalProperties": false
         },
         "keywords": {
             "type": "array",

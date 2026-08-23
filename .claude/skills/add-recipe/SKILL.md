@@ -27,9 +27,22 @@ conventions on top of it:
 - Order of content: title, then servings and serving size (or `yield` for
   sauces/condiments — one of `servings`/`yield` is required), then
   ingredients, then instructions.
-- Set `category` (e.g. sauce, dessert, condiment), a few `keywords`, and
-  `method`/`time` when the source gives them. `time.total` replaces the
-  prep/inactive/cook breakdown when present, so use one or the other.
+- `category` and `method` are **closed enums** — see `schema/recipe.json`
+  for the allowed values. Pick the closest existing value rather than
+  inventing one; the collection is only sortable if these stay controlled.
+  `method` is an array, so a recipe that sears then braises gets both.
+- Set `cuisine` when the recipe belongs to a regional tradition (Hawaiian,
+  Korean, Mexican …). It's freeform, but keep it a bare capitalized
+  adjective. Don't also repeat it in `keywords` — `keywords` is for
+  everything that isn't already a structured field.
+- Record attribution in `source`, never as prose in `endnotes`: any of
+  `{name, author, url, page, date, adapted}`. Set `adapted: true` when
+  your version departs from the original. The renderer generates the
+  credit line ("Adapted from The Border Cookbook, p. 228."), so don't
+  write one by hand.
+- Add a few `keywords` and `time` when the source gives them.
+  `time.total` replaces the prep/inactive/cook breakdown when present,
+  so use one or the other.
 - Quantities use Unicode vulgar fractions: ¼ ½ ¾ ⅓ ⅔ ⅛ — never "1/4".
   These specific fractions are known-safe; any other exotic character must
   pass the glyph check below.

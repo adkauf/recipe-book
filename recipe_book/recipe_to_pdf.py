@@ -98,6 +98,8 @@ def recipe_to_pdf(recipe_path, output_dir, theme=CLASSIC, layout=STANDARD):
     text_width = page_w - 2 * margin
 
     keywords = recipe.get("keywords", [])
+    if recipe.get("cuisine"):
+        keywords = [recipe["cuisine"]] + keywords
     if recipe.get("category"):
         keywords = [recipe["category"]] + keywords
     keywords = list(dict.fromkeys(keywords))
