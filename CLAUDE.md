@@ -54,6 +54,10 @@ gitignored and exists ONLY locally. Never delete or `git clean` it;
   `method` is an array (a recipe can sear *and* braise).
 - Recipe attribution belongs in the structured `source` object, not in
   prose; the renderer generates the credit line from it.
+- Never use real people's names, real URLs/websites, or other identifying
+  info as `examples`/sample values in schema files, docs, or PR text —
+  this repo is public. Use clearly fake placeholders (e.g. "Jane Doe",
+  "example.com", "Example Cookbook") instead.
 
 ## Conventions
 
