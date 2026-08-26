@@ -15,8 +15,11 @@ Curry" → `chicken-katsu-curry`).
 - Photo or scan → Read the image file.
 - Pasted text → use as-is.
 
-Check `ls data/recipes/` first: if the recipe already exists, update that file
-instead of creating a duplicate.
+Check `ls data/recipes/` first: if the recipe already exists — same filename,
+or the new source turns out to be the same recipe as an existing file (e.g.
+matching ingredients/instructions) — don't silently update it or create a
+duplicate. Ask the user which they want: update the existing file (and how),
+or add the new one separately.
 
 ## 2. Write the JSON
 
