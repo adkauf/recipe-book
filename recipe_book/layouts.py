@@ -48,9 +48,14 @@ def section_heading(label, styles, theme):
 
 
 def component_subheading(label, styles):
-    """Italic sub-header for a named component within a section."""
+    """Italic sub-header for a named component within a section.
+
+    No leading spacer: callers that stack multiple components add the gap
+    between sections themselves, so the first header in a frame sits flush
+    at the top instead of getting extra top padding no other frame content
+    has (e.g. the meta line, which starts flush in the facing column).
+    """
     return [
-        Spacer(1, 0.15 * inch),
         Paragraph(pdf_text(label), styles["component_header"]),
         Spacer(1, 0.06 * inch),
     ]
@@ -488,9 +493,10 @@ class SideBySideLayout(Layout):
     name      = "sidebyside"
     page_size = LETTER
 
-    _LEFT_FRAC = 0.38
-    _COL_GAP   = 0.2 * inch
-    _HANG      = 16  # hanging-indent points (~3 chars at body size)
+    _LEFT_FRAC   = 0.38
+    _COL_GAP     = 0.2 * inch
+    _SECTION_GAP = 0.2 * inch  # gap between components within a column
+    _HANG        = 16  # hanging-indent points (~3 chars at body size)
 
     def make_styles(self, theme):
         styles = super().make_styles(theme)
@@ -783,7 +789,7 @@ class SideBySideLayout(Layout):
             if not component.get("ingredients"):
                 continue
             if not first_group:
-                story.append(Spacer(1, 0.25 * inch))
+                story.append(Spacer(1, self._SECTION_GAP))
             if use_headers and component.get("title"):
                 story.extend(component_subheading(component["title"], styles))
             story.extend(self._ingredient_lines(component["ingredients"], styles))
@@ -804,7 +810,7 @@ class SideBySideLayout(Layout):
             if not component.get("instructions"):
                 continue
             if not first_group:
-                story.append(Spacer(1, 0.25 * inch))
+                story.append(Spacer(1, self._SECTION_GAP))
             if use_headers and component.get("title"):
                 story.extend(component_subheading(component["title"], styles))
             story.extend(instruction_lines(component["instructions"], styles))
