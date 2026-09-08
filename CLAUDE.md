@@ -16,10 +16,11 @@ Generates recipe and recipe-book PDFs from JSON via ReportLab.
 
 - A PostToolUse hook (`.claude/hooks/validate-content.sh`) auto-validates
   recipe/book/menu JSON (schema + glyph check) after every Write/Edit.
-- Skills: `add-recipe` (recipe intake pipeline), `compose-book` (curate
-  library recipes into a book), `preview-pdf` (render PDFs to PNG with
-  `pdftoppm` for visual inspection — use it before declaring layout/theme
-  work done).
+- Skills: `add-recipe` (recipe intake pipeline), `scale-recipe` (create a
+  reduced/increased-portion version of a library recipe as a new file),
+  `compose-book` (curate library recipes into a book), `preview-pdf`
+  (render PDFs to PNG with `pdftoppm` for visual inspection — use it
+  before declaring layout/theme work done).
 - A systemd user timer (`recipe-backup.timer`, machine-local) runs
   `drive_backup.sh backup` daily; check with
   `systemctl --user list-timers recipe-backup.timer`.
@@ -66,3 +67,6 @@ gitignored and exists ONLY locally. Never delete or `git clean` it;
   so they run from any directory; live in `scripts/`.
 - Workflow: branch → push → PR to `main`; the user merges PRs on GitHub
   (branches auto-delete on merge). Don't commit directly to `main`.
+- Keep `README.md` in sync: when a change adds a skill/script/command, or
+  changes how a feature fundamentally works, update the relevant README
+  section in the same PR rather than leaving it to drift.
