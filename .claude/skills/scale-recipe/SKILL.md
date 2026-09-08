@@ -38,7 +38,14 @@ unless the user says otherwise.
   similar to the printed title. Any framing that this is a reduced
   portion belongs in the book's own front matter/notes, not baked into
   every recipe title.
-- Set `servings` (or `yield`) to the new target.
+- Set `servings` (or `yield`) to the new target. For a `yield` recipe
+  (sauces, condiments) restate the measure itself — "1 pint" → "1 cup" —
+  since there's no separate count to carry the change.
+- **Do not scale `serving_size`.** It describes one portion, which is
+  exactly what stays fixed while the count changes. Scaling both
+  double-counts the reduction: 6 × 1 cup dropped to 2 × ⅓ cup is a sixth
+  of the original, not a third. Change it only if the user actually wants
+  a different portion size, which is a separate request from scaling.
 
 ## 3. Rescale amounts — judgment, not a divide script
 
