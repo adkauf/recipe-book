@@ -61,6 +61,18 @@ conventions on top of it:
   amount is genuinely open-ended. Don't reach for `"to taste"` on
   ingredients where amount actually matters (e.g. salt in a fermentation
   brine) — give those a real measured quantity instead.
+- For fermentation and baking recipes, measure primary ingredients in
+  grams rather than cups/tablespoons/counts — cabbage heads, onions,
+  carrots, and flour scoops all vary too much for volume to transfer
+  precision between cooks. Convert the source's volume/count measurements
+  to grams (estimate from a kitchen reference if the source doesn't give
+  weights), and add a `note` with the rough count/volume for reference
+  (e.g. `"note": "about 2 medium carrots"`) so the recipe stays usable
+  without a scale on hand. Keep small supporting spices/aromatics
+  (teaspoon-scale) as volume measures — weighing ½ teaspoon of oregano
+  doesn't add precision. Salt in a ferment should be a weighed amount
+  scaled to the vegetable weight (this cookbook's ferments run roughly
+  3-5% salt by vegetable weight), never `to taste`.
 - Use a single untitled component unless the recipe has genuinely distinct
   phases (e.g. sauce + main); then give each component a `title`.
 - **Rewrite instructions in your own words** as complete, readable prose —

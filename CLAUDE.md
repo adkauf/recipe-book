@@ -59,6 +59,13 @@ gitignored and exists ONLY locally. Never delete or `git clean` it;
   info as `examples`/sample values in schema files, docs, or PR text —
   this repo is public. Use clearly fake placeholders (e.g. "Jane Doe",
   "example.com", "Example Cookbook") instead.
+- Fermentation and baking recipes weigh their primary bulk ingredients
+  (vegetables/fruit in a ferment; flour, sugar, butter in a dough or
+  batter) in grams rather than cups/tablespoons/counts — those vary too
+  much by size and packing for the precision these recipes need. Salt in
+  a ferment is always a measured weight scaled to the vegetable weight,
+  never `to taste`. Small supporting ingredients (spices, aromatics) can
+  stay volumetric.
 
 ## Conventions
 
