@@ -65,6 +65,12 @@ then rewrite each ingredient by hand:
   needed") only if the ingredient genuinely tolerates that — don't use it
   to dodge a hard scaling call on something that matters (e.g. leavening,
   brine salt).
+- **Keep weight-based recipes in grams.** If the original measures
+  ingredients by weight (typical for fermentation and baking), don't
+  convert scaled amounts back into cups/tablespoons — round to a clean
+  gram figure instead. Salt in a ferment should scale with the vegetable
+  weight to preserve the original salinity percentage, not scale
+  independently.
 - **Re-check instructions, not just ingredients.** Pan/dish size, cook
   time, and yield-dependent steps ("divide into two portions", "fills a
   9x13 pan") often need rewording for the new scale — a smaller mass in

@@ -198,6 +198,10 @@ Each recipe is a JSON file in `data/recipes/` validated against `schema/recipe.j
 - Ingredient names are not capitalized, except for proper nouns.
 - Measurement units are spelled out (e.g., `tablespoon`, not `tbsp`).
 - Quantities use Unicode fraction characters (e.g., `½`, `¾`, `⅓`).
+- Fermentation and baking recipes weigh their primary bulk ingredients in
+  grams rather than cups/tablespoons/counts — volume doesn't transfer
+  precision reliably between cooks for these. Small supporting ingredients
+  (spices, aromatics) still use volume measures.
 - Every ingredient requires `amount`. For a measured quantity, use `{ "quantity": ..., "unit": ... }`
   (unit optional, e.g. for counts like `"quantity": "2"`). For an ingredient with no fixed amount —
   a seasoning added to taste, a garnish, something for serving — use `{ "descriptor": "to taste" }`
