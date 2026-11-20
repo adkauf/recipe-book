@@ -19,7 +19,7 @@ set -u
 cd "$(dirname "$0")/.."
 
 dest="${RECIPE_PUBLISH_DIR:-/mnt/chromeos/GoogleDrive/MyDrive/Recipes}"
-SUBS="recipes books menus"
+SUBS="recipes books menus shopping-lists"
 
 usage() {
     echo "usage: $0 [publish|prune]" >&2

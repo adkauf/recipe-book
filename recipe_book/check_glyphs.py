@@ -78,12 +78,17 @@ def _menu_extra_chars(menu_file):
                         yield from _text_chars(json.load(rfh).get("title", ""))
 
 
-def check_glyphs(globs=("data/recipes/*.json", "data/books/*.json", "data/menus/*.json")):
+def check_glyphs(globs=(
+    "data/recipes/*.json",
+    "data/books/*.json",
+    "data/menus/*.json",
+    "data/shopping-lists/*.json",
+)):
     """Return error strings for characters lacking a glyph in their font.
 
-    Book and menu files are checked too: their titles, descriptions, section
-    titles, dish names, and notes all render into the PDF in the same body
-    fonts. Menu text (including the titles of recipes a menu references)
+    Book, menu, and shopping-list files are checked too: their titles,
+    descriptions, section titles, dish/item names, and notes all render into
+    the PDF in the same body fonts. Menu text (including the titles of recipes a menu references)
     additionally renders in the elegant style's EB Garamond faces, so it is
     checked against those as well.
     """

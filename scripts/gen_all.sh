@@ -1,5 +1,5 @@
 #!/bin/sh
-# Generate all recipes and books. Exits non-zero if anything failed.
+# Generate all recipes, books, menus, and shopping lists. Exits non-zero if anything failed.
 set -u
 cd "$(dirname "$0")/.."
 
@@ -50,6 +50,18 @@ for menu in data/menus/*.json; do
     fi
 done
 echo "Wrote ${mc} menus."
+
+sc=0
+for list in data/shopping-lists/*.json; do
+    [ -e "${list}" ] || continue
+    if python3 recipe_book/shopping_list_to_pdf.py "${list}" --theme "${theme}"; then
+        sc=$((sc + 1))
+    else
+        echo "FAILED: ${list}" >&2
+        failures=$((failures + 1))
+    fi
+done
+echo "Wrote ${sc} shopping lists."
 
 if [ "${failures}" -gt 0 ]; then
     echo "${failures} generation(s) failed." >&2

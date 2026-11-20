@@ -4,21 +4,24 @@ Generates recipe and recipe-book PDFs from JSON via ReportLab.
 
 ## Commands
 
-- `./scripts/gen_all.sh` — generate all recipes and books (runs glyph check first; non-zero exit on any failure)
+- `./scripts/gen_all.sh` — generate all recipes, books, menus, and shopping lists (runs glyph check first; non-zero exit on any failure)
 - `python3 recipe_book/recipe_to_pdf.py data/recipes/<name>.json --theme print --layout sidebyside` — single recipe
 - `python3 recipe_book/book_to_pdf.py data/books/<name>.json --theme print --layout sidebyside` — single book
 - `python3 recipe_book/menu_to_pdf.py data/menus/<name>.json --theme print --style elegant` — single menu card (`--style classic|elegant`; elegant needs the fonts-ebgaramond-extra package)
-- `./scripts/publish.sh [publish|prune]` — copy `output/*/*.pdf` to Google Drive, mirroring the recipes/books/menus structure; `prune` removes stale Drive-only PDFs after confirmation (`publish` never deletes)
+- `python3 recipe_book/shopping_list_to_pdf.py data/shopping-lists/<name>.json --theme print` — single shopping list
+- `./scripts/publish.sh [publish|prune]` — copy `output/*/*.pdf` to Google Drive, mirroring the recipes/books/menus/shopping-lists structure; `prune` removes stale Drive-only PDFs after confirmation (`publish` never deletes)
 - `./scripts/drive_backup.sh backup|restore|prune` — back up / restore private content; `prune` removes stale Drive-only files after confirmation (`backup`/`restore` never delete)
-- `python3 .claude/skills/add-recipe/validate.py <file>` — validate a recipe/book/menu JSON against its schema
+- `python3 .claude/skills/add-recipe/validate.py <file>` — validate a recipe/book/menu/shopping-list JSON against its schema
 
 ## Automation
 
 - A PostToolUse hook (`.claude/hooks/validate-content.sh`) auto-validates
-  recipe/book/menu JSON (schema + glyph check) after every Write/Edit.
+  recipe/book/menu/shopping-list JSON (schema + glyph check) after every Write/Edit.
 - Skills: `add-recipe` (recipe intake pipeline), `scale-recipe` (create a
   reduced/increased-portion version of a library recipe as a new file),
-  `compose-book` (curate library recipes into a book), `preview-pdf`
+  `compose-book` (curate library recipes into a book), `shopping-list`
+  (consolidated, store-ordered shopping-list PDF for recipes, a menu, or a
+  book), `preview-pdf`
   (render PDFs to PNG with `pdftoppm` for visual inspection — use it
   before declaring layout/theme work done).
 - A systemd user timer (`recipe-backup.timer`, machine-local) runs
@@ -27,7 +30,7 @@ Generates recipe and recipe-book PDFs from JSON via ReportLab.
 
 ## Private content — IMPORTANT
 
-`data/` (containing `recipes/`, `books/`, `menus/`, and `images/`) is
+`data/` (containing `recipes/`, `books/`, `menus/`, `shopping-lists/`, and `images/`) is
 gitignored and exists ONLY locally. Never delete or `git clean` it;
 `./scripts/drive_backup.sh backup` is its only safety net.
 
@@ -40,9 +43,10 @@ gitignored and exists ONLY locally. Never delete or `git clean` it;
 
 ## Constraints
 
-- Recipe, book, and menu JSON must validate against `schema/recipe.json` /
-  `schema/book.json` / `schema/menu.json` — the schemas are the source of
-  truth for structure.
+- Recipe, book, menu, and shopping-list JSON must validate against
+  `schema/recipe.json` / `schema/book.json` / `schema/menu.json` /
+  `schema/shopping-list.json` — the schemas are the source of truth for
+  structure.
 - All recipe text must pass `recipe_book/check_glyphs.py`; the fonts lack
   some Unicode glyphs, so check after adding text with diacritics.
 - Every ingredient requires `amount`: a measured `{quantity, unit?}`, or

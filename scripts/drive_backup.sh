@@ -1,7 +1,7 @@
 #!/bin/sh
 # Back up or restore the private data/ directories (recipes, books, menus,
-# images) to/from Google Drive via the ChromeOS Drive mount. The Drive copy
-# stays flat (Recipe Book/recipes, ...) so older backups restore unchanged.
+# shopping lists, images) to/from Google Drive via the ChromeOS Drive mount.
+# The Drive copy stays flat (Recipe Book/recipes, ...) so older backups restore unchanged.
 #
 # ChromeOS mounts Google Drive into the Linux container once it is shared:
 # Files app -> right-click "Google Drive" -> "Share with Linux".
@@ -19,7 +19,7 @@ set -u
 cd "$(dirname "$0")/.."
 
 dest="${RECIPE_BACKUP_DIR:-/mnt/chromeos/GoogleDrive/MyDrive/Recipe Book}"
-DIRS="recipes books images menus"
+DIRS="recipes books images menus shopping-lists"
 
 usage() {
     echo "usage: $0 backup|restore|prune" >&2
