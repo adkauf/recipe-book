@@ -12,16 +12,18 @@ recipe-book/
 │   ├── recipes/      # Individual recipe JSON files
 │   ├── books/        # Recipe book definitions
 │   ├── menus/        # Menu plans for meals or whole days
+│   ├── shopping-lists/  # Consolidated shopping lists for sets of recipes
 │   └── images/       # Cover images
-├── schema/           # JSON schemas for recipes, books, and menus
+├── schema/           # JSON schemas for recipes, books, menus, and shopping lists
 ├── recipe_book/      # Python source
 │   ├── recipe_to_pdf.py   # Generates a single recipe PDF
 │   ├── book_to_pdf.py     # Compiles a full recipe book PDF
 │   ├── menu_to_pdf.py     # Generates a menu-card PDF
+│   ├── shopping_list_to_pdf.py  # Generates a check-box shopping-list PDF
 │   ├── layouts.py         # Page layout strategies
 │   ├── themes.py          # Visual themes
 │   └── check_glyphs.py    # Verifies font glyph coverage for recipe/book text
-├── output/           # Generated PDFs, mirroring data/ (recipes/, books/, menus/)
+├── output/           # Generated PDFs, mirroring data/ (recipes/, books/, menus/, shopping-lists/)
 ├── fonts/            # Fonts shipped with the project (see Dependencies)
 ├── scripts/
 │   ├── gen_all.sh        # Batch script to generate everything
@@ -31,6 +33,7 @@ recipe-book/
     ├── skills/add-recipe/    # Recipe intake pipeline + schema validator (validate.py)
     ├── skills/scale-recipe/  # Create a reduced/increased-portion version of a library recipe
     ├── skills/compose-book/  # Curate library recipes into a recipe book
+    ├── skills/shopping-list/ # Consolidated shopping list for recipes/menus/books (gather.py)
     ├── skills/preview-pdf/   # Render output PDFs to PNG for visual inspection
     └── hooks/validate-content.sh  # Auto-validates recipe/book/menu JSON on edit
 ```
@@ -64,7 +67,7 @@ any generation fails.
 ./scripts/publish.sh prune    # list, then on confirmation delete, stale Drive PDFs
 ```
 Copies everything in `output/` to `MyDrive/Recipes` via the ChromeOS Drive
-mount, preserving the `recipes/`, `books/`, `menus/` structure. Requires sharing Google Drive with Linux once (Files app →
+mount, preserving the `recipes/`, `books/`, `menus/`, `shopping-lists/` structure. Requires sharing Google Drive with Linux once (Files app →
 right-click "Google Drive" → "Share with Linux"). Override the destination
 with the `RECIPE_PUBLISH_DIR` environment variable. `publish` never deletes —
 if a PDF is renamed or removed locally (e.g. after renaming a recipe), the
@@ -84,7 +87,25 @@ matches the recipe styling; `elegant` is an EB Garamond card with a
 chancery script title, fleuron ornaments, and a double hairline border
 frame. `gen_all.sh` also generates all menus (using the elegant style).
 
-**Back up / restore private content (recipes, books, menus, cover images):**
+**Shopping list:** a consolidated list for a set of recipes in
+`data/shopping-lists/*.json`, validated by `schema/shopping-list.json`. It
+names the recipes it shops for (each with an optional batch `scale`) and
+groups items into store sections in walking order. Each item carries a
+purchase quantity (`2 heads`, `1 (28-ounce) can`), an optional note with
+what the recipes actually need, and the recipes that use it.
+```sh
+python3 recipe_book/shopping_list_to_pdf.py data/shopping-lists/thanksgiving-dinner.json --theme print
+```
+Renders a two-column Letter page with a check box beside each item. The
+header numbers the recipes, and each item cites those numbers so you can
+drop a dish and still see what to skip. The list JSON is written by the
+Claude Code `shopping-list` skill. Its `gather.py` helper pulls the raw
+ingredients from recipes, menus, or books (with `stem:scale` multipliers),
+and the skill then merges duplicates and converts to purchase units.
+`gen_all.sh` also generates all shopping lists, and `publish.sh` and
+`drive_backup.sh` include them.
+
+**Back up / restore private content (recipes, books, menus, shopping lists, cover images):**
 ```sh
 ./scripts/drive_backup.sh backup    # copy the data/ directories to Google Drive
 ./scripts/drive_backup.sh restore   # copy them back from Google Drive
@@ -142,7 +163,7 @@ the schedule with `systemctl --user list-timers recipe-backup.timer`.
 - `sidebyside` — two-column layout; ingredients on the left, instructions on the right; overflow pages use a single full-width column
 
 `-o / --output-dir` — output directory (default mirrors `data/`:
-`output/recipes/`, `output/books/`, or `output/menus/`)
+`output/recipes/`, `output/books/`, `output/menus/`, or `output/shopping-lists/`)
 
 ## Recipe JSON Format
 

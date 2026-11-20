@@ -1,9 +1,9 @@
-"""Validate a recipe, book, or menu JSON file against its schema.
+"""Validate a recipe, book, menu, or shopping-list JSON file against its schema.
 
 Usage: python3 .claude/skills/add-recipe/validate.py <file.json> [...]
 
 The schema is chosen by the file's parent directory (recipes/ -> recipe,
-books/ -> book, menus/ -> menu). Exits non-zero on the first invalid file.
+books/ -> book, menus/ -> menu, shopping-lists/ -> shopping-list). Exits non-zero on the first invalid file.
 """
 
 import json
@@ -13,7 +13,12 @@ from pathlib import Path
 import jsonschema
 
 ROOT = Path(__file__).resolve().parents[3]
-SCHEMAS = {"recipes": "recipe", "books": "book", "menus": "menu"}
+SCHEMAS = {
+    "recipes": "recipe",
+    "books": "book",
+    "menus": "menu",
+    "shopping-lists": "shopping-list",
+}
 
 
 def main():
@@ -25,7 +30,7 @@ def main():
         path = Path(arg).resolve()
         kind = SCHEMAS.get(path.parent.name)
         if kind is None:
-            print(f"{arg}: not under recipes/, books/, or menus/", file=sys.stderr)
+            print(f"{arg}: not under recipes/, books/, menus/, or shopping-lists/", file=sys.stderr)
             sys.exit(2)
         with open(ROOT / "schema" / f"{kind}.json", encoding="utf-8") as fh:
             schema = json.load(fh)

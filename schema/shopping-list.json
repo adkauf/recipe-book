@@ -1,0 +1,107 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Shopping List",
+    "description": "A consolidated, store-ordered shopping list for one or more library recipes",
+    "type": "object",
+    "required": ["title", "recipes", "sections"],
+    "properties": {
+        "$schema": {
+            "type": "string"
+        },
+        "title": {
+            "type": "string",
+            "examples": ["Thanksgiving Dinner", "Week of March 2"]
+        },
+        "subtitle": {
+            "type": "string"
+        },
+        "date": {
+            "type": "string",
+            "format": "date",
+            "description": "When the food is needed (or the shopping trip), ISO format.",
+            "examples": ["2026-11-26"]
+        },
+        "recipes": {
+            "type": "array",
+            "minItems": 1,
+            "description": "The recipes this list shops for, printed as the list's 'For' line. Every item's `recipes` entry must name one of these.",
+            "items": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "description": "Recipe filename stem, relative to data/recipes/ (e.g. 'sauerkraut')"
+                    },
+                    "scale": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "description": "Batch multiplier the quantities were computed for (2 = doubled, 0.5 = halved). Omit for a single batch."
+                    }
+                },
+                "additionalProperties": false
+            }
+        },
+        "notes": {
+            "type": "array",
+            "description": "Reminders printed under the header: substitutions, what was assumed on hand, make-or-buy decisions.",
+            "items": { "type": "string" },
+            "minItems": 1
+        },
+        "sections": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Store sections in walking order (Produce, Meat & Seafood, Dairy & Eggs, …). Freeform titles, since stores differ.",
+            "items": {
+                "type": "object",
+                "required": ["title", "items"],
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "examples": ["Produce", "Dairy & Eggs", "Check the Pantry"]
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Short guidance under the section title, e.g. 'Likely on hand — check before you go.'"
+                    },
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "required": ["name"],
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "examples": ["garlic", "unsalted butter"]
+                                },
+                                "quantity": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "description": "How much to buy, in purchase units and rounded up. Freeform: '2 heads', '1 (28-ounce) can', '1 pound'. Omit for items needed in no fixed amount.",
+                                    "examples": ["2 heads", "1 pound", "1 (28-ounce) can"]
+                                },
+                                "note": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "description": "What the recipes actually call for, or buying guidance.",
+                                    "examples": ["about 20 cloves", "need 450 grams", "or cane vinegar"]
+                                },
+                                "recipes": {
+                                    "type": "array",
+                                    "description": "Stems of the recipes (from the top-level `recipes`) that use this item, so a cook can skip a dish and still know what to drop.",
+                                    "items": { "type": "string" },
+                                    "minItems": 1
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    }
+                },
+                "additionalProperties": false
+            }
+        }
+    },
+    "additionalProperties": false
+}
